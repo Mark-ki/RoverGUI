@@ -8,6 +8,7 @@ gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" signaller::uri=ws:
 
 gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" v4l2src device-name=/dev/video0 ! videoconvert ! vp8enc deadline=1 ! queue ! video/x-vp8 ! ws.
 
+gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" signaller::uri="ws://10.141.81.176:8443" mfvideosrc ! videoconvert ! vp8enc deadline=1 ! queue ! video/x-vp8 ! ws.   
 
 clone gstreamer branch 1.24, meson build, in venv if necessary for issue with mscvrc, then run gst env.py then go cargo build package then source target/debug.
 Docker for signalling server as usual.
