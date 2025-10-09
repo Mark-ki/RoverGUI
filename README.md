@@ -1,51 +1,61 @@
-# Wisconsin Robotics -- 2021 Software System
+# wr_hci_hud
 
-## Setting Up the Software System
+@defgroup wr_hci_hud wr_hci_hud
+@brief A package (currently empty) to act as a HUD for drivers
 
-To set up the software system on a dev machine using Docker, see [`/docs/setup_dev_docker.md`](@ref wr_system_setup_dev_docker).
-This is the recommended method for dev machines.
+# To start the GUI from ./WR_HCI_HUD
+npm install
+pip install -r requirements.txt
 
-To set up the software system on a base station or dev machine, see [`/docs/setup_dev.md`](@ref wr_system_setup_dev).
+# To start the video streaming and ros server
+docker-compose build
+docker-compose up
+run setup.py to run websockets for streaming videos. Change the address and port if needed.
 
-To set up the software system on a rover, see [`docs/setup_rover.md`](@ref wr_system_setup_wrover).
+run app.py in wr_hci_hud/src 
 
-## Booting the Full Robot System
+May have to set port 5000, 9090 inbound to open in firewall for multiple client 
 
-To launch the rover, you'll first want to start the base station radio and ensure that both the rover and base station are connected to it.
-Then, you can start the launcher UI on the base station, which is opened with the command:
+the ros.js file is currently publishing and then subscribing to the ros websocket to simulate actual input
 
-```sh
-$ ./launch.sh
-```
 
-You should see a small window that looks like this:
+## History
 
-![](docs/launcher_ui.png)
+Ideas for this node have gone through several iterations.  None of the following have been implemented far enough to have a good estimate for the efficacy of the method:
 
-From here, you can select a launch configuration from the drop-down box and press the "Launch!" button to launch the robot system.
-To shut down the rover system, you can simply send an interrupt to the terminal window using `Ctrl`+`C`.
+* A locally hosted webserver on the base station (probably easiest in Python) that live-updates its components to reflect subscriptions over ROS.
+  * Pros:
+    * Most of the GUI heavy-lifting is taken care of by the web browser
+    * Lots of options/documentation for the web server itself
+    * Could be accessed/used by any other computer on the network (good for debugging)
+  * Cons:
+    * May be hidden complexity to configure layout
+    * Transporting images/geospatial data (if rendered) may take up a lot of bandwidth
+    * Rendering geospatial data/proprioception might not be easy
+    * Camera streaming might not be possible due to bandwidth, may still need extra tool
+    * Lack of Internet at competition might limit design or force pre-downloaded dependencies
+* Qt/Tk/similar locally hosted application that is ROS-aware.
+  * Pros:
+    * Lots of language options
+    * Broad customizability
+    * Likely easier ROS integration (due to customizability)
+    * Easier to make visual rendering more efficient
+  * Cons:
+    * Analysis Paralysis
+      * The team does more of the legwork on the GUI magic
+      * Likely complex configuration
+    * Constrained to platform compiled for, or need to distribute the binary
+* Direct console access (current solution)
+  * Pros:
+    * Few/no layers of extra support required between operator and WRover
+    * No GUI work
+  * Cons:
+    * Operator must be ***extremely*** proficient in ROS/`bash`/filesystems/networks
+      * No assistance/recovery available if something goes wrong
+    * Hard to visualize large number of subsystems at once
+    * Slow to operate
+    * Hard to construct complex diagnostic tools and insights on the fly
+    * Little to no visual support outside of `rqt`
 
-Alternatively, you can directly launch a full-system launch file from the `wr_entry_point` package.
-There are the `auto_nav.launch`, `eq_service.launch`, `erdm.launch` and `science.launch` files, each of which configures the robot system for a specific URC task.
-Additionally, several test configurations are available in launch files prefixed by `test_`, each of which allows for testing one robot subsystem in isolation.
+Given past experience at competition, even a small GUI with no input options (a literal HUD) would be massively beneficial compared to reading individaul diagnostics one at a time.  This could then be expanded to provide more detailed insights, inputs to the WRover, and specializations for the different competition modes.
 
-To use these launch files, you'll first need to start `roscore` on the rover.
-You'll also need to set certain environment variables which are described in the `README.md` document in the `wr_entry_point` package.
-These env vars provide information about the environment of the launch to the robot system.
-An example of a successful launch on real rover hardware might be:
-
-```sh
-$ ssh wiscrobo@wrover-nano.local '~/catkin_ws/WRover21_Software/env.sh roscore'
-$ export ROS_MASTER_URI='http://wrover-nano.local:11311'
-$ export ROS_IP='192.168.1.111'
-$ export WROVER_LOCAL=false
-$ export WROVER_HW=REAL
-$ roslaunch wr_entry_point erdm.launch
-```
-
-## Documentation
-
-Documents describing the structure and organization of the software system can be found in the `/docs` subdirectory of this repository.
-You should probably read through these before starting any substantial work.
-
-There is no particular code style guide that we use, but you should try to maintain a consistent style for all the code you write. Additionally, you should make sure your code is readable and sensible; if there's anything that's confusing or unintuitive, use comments to clarify it for future maintainers.
