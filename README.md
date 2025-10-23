@@ -3,20 +3,38 @@
 @defgroup wr_hci_hud wr_hci_hud
 @brief A package (currently empty) to act as a HUD for drivers
 
-# To start the GUI from ./WR_HCI_HUD
+Currently, the old GUI is in backend/ including a vanilla JS frontend. We are moving to React.js, which is in frontend/ but will keep the Flask backend from backend/
+
+# To start the GUI from ./backend
 npm install
 pip install -r requirements.txt
 
-# To start the video streaming and ros server
-docker-compose build
-docker-compose up
-run setup.py to run websockets for streaming videos. Change the address and port if needed.
-
 run app.py in wr_hci_hud/src 
+
+# To start ROS server
+Have ros2 humble installed and run
+
+ros2 launch rosbridge_server rosbridge_websocket_launch.xml
+
+# To start the Webrtc signalling server for video streaming
+Build gst-plugins-rs and source with
+
+export GST_PLUGIN_PATH=[path to gst-plugins-rs]/target/debug:$GST_PLUGIN_PATH
+
+then run 
+
+cargo run --bin gst-webrtc-signalling-server
+
+The streamer would run something like this, which would go through the server and then to the GUI:
+
+gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" signaller::uri="ws://10.141.81.176:8443" mfvideosrc ! videoconvert ! vp8enc deadline=1 ! queue ! video/x-vp8 ! ws.   
+
 
 May have to set port 5000, 9090 inbound to open in firewall for multiple client 
 
 the ros.js file is currently publishing and then subscribing to the ros websocket to simulate actual input
+
+The setup is done on the base station
 
 
 ## History
