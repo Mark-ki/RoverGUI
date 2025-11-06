@@ -11,13 +11,13 @@ import CameraPanel from './panels/CameraPanel';
 
 const RoverControlInterface = () => {
   return (
-    <div className="bg-black text-green-400 h-screen p-2 font-mono text-xs overflow-hidden"> 
+    <div className="bg-black text-green-400 h-screen p-2 font-mono text-xs overflow-hidden flex flex-col space-y-2"> 
       <Header></Header> 
       
       <PanelGroup direction="horizontal">
         
         {/* Left Panel - Controls */} 
-        <Panel className="panel">
+        <Panel className="panel" defaultSize={25}>
 
           <PanelGroup direction="vertical">
           
@@ -26,8 +26,8 @@ const RoverControlInterface = () => {
           <ControlPanel /> 
           </Panel>
 
-          <PanelResizeHandle className="h-1">
-            <div className="h-full bg-gray-600 hover:bg-green-400 transition-colors"></div>
+          <PanelResizeHandle className="h-2">
+            <div className="h-full hover:bg-green-400 transition-colors"></div>
           </PanelResizeHandle>
 
           {/* Diagnostics */} 
@@ -38,20 +38,20 @@ const RoverControlInterface = () => {
           </PanelGroup>
         </Panel>
         
-        <PanelResizeHandle className="w-1">
-            <div className="h-full bg-gray-600 hover:bg-green-400 transition-colors"></div>
+        <PanelResizeHandle className="w-2">
+            <div className="h-full hover:bg-green-400 transition-colors"></div>
           </PanelResizeHandle>
 
-        <Panel className="panel">
+        <Panel className="panel" defaultSize={50}>
         <CameraPanel /> 
         </Panel>
       
-        <PanelResizeHandle className="w-1">
-            <div className="h-full bg-gray-600 hover:bg-green-400 transition-colors"></div>
+        <PanelResizeHandle className="w-2">
+            <div className="h-full hover:bg-green-400 transition-colors"></div>
           </PanelResizeHandle>
 
 
-        <Panel className="panel">
+        <Panel className="panel" defaultSize={25}>
         <MapPanel /> 
         </Panel>
 
