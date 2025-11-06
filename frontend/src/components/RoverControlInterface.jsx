@@ -7,6 +7,7 @@ import DiagnosticsPanel from './panels/DiagnosticPanel';
 import ControlPanel from './panels/ControlPanel';
 import MapPanel from './panels/MapPanel';
 import CameraPanel from './panels/CameraPanel';
+import ConsolePanel from './panels/ConsolePanel';
 
 
 const RoverControlInterface = () => {
@@ -32,7 +33,7 @@ const RoverControlInterface = () => {
 
           {/* Diagnostics */} 
           <Panel className="panel">
-          <DiagnosticsPanel /> 
+          <ConsolePanel /> 
           </Panel>
           
           </PanelGroup>
