@@ -49,7 +49,28 @@ const ControlPanel = ({ activeTab, setActiveTab }) => {
               )}
               
               {activeControlTab === 'Data' && (
+
                 <div className="space-y-2">
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>AMPERE</span>
+                      <span className="text-green-400">9.0A</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-2 rounded">
+                      <div className="bg-green-400 h-2 rounded" style={{width: '60%'}}></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between text-xs mb-1">
+                      <span>BATTERY</span>
+                      <span className="text-yellow-400">40%</span>
+                    </div>
+                    <div className="w-full bg-slate-800 h-2 rounded">
+                      <div className="bg-yellow-400 h-2 rounded" style={{width: '40%'}}></div>
+                    </div>
+                  </div>
+                  
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-slate-800 p-2">
                       <div className="text-slate-400">COORD X</div>
