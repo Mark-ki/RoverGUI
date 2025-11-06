@@ -85,8 +85,20 @@ const ControlPanel = ({ activeTab, setActiveTab }) => {
                       <div className="text-green-400 font-bold">4.00m</div>
                     </div>
                     <div className="bg-slate-800 p-2">
-                      <div className="text-slate-400">HDG</div>
-                      <div className="text-green-400 font-bold">306.97°</div>
+                      <div className="text-slate-400">VEL X</div>
+                      <div className="text-green-400 font-bold">3.00m/s</div>
+                    </div>
+                    <div className="bg-slate-800 p-2">
+                      <div className="text-slate-400">VEL Y</div>
+                      <div className="text-green-400 font-bold">4.00m/s</div>
+                    </div>
+                    <div className="bg-slate-800 p-2">
+                      <div className="text-slate-400">ACC</div>
+                      <div className="text-green-400 font-bold">4.00m/s^2</div>
+                    </div>
+                    <div className="bg-slate-800 p-2">
+                      <div className="text-slate-400">Compass</div>
+                      <div className="text-green-400 font-bold">90°</div>
                     </div>
                   </div>
                 </div>
