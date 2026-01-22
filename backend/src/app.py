@@ -110,4 +110,4 @@ def get_ip():
 if __name__ == '__main__':
     # generateMap()
     # app.run(host='0.0.0.0', port=5000, debug=True)
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True) 
