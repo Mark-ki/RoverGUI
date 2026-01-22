@@ -9,10 +9,10 @@ import threading
 
 from flask_socketio import SocketIO, emit
 import os
-import pty
+# import pty
 import threading
-import eventlet
-eventlet.monkey_patch()  
+# import eventlet
+# eventlet.monkey_patch()  
 app = Flask(__name__)
 CORS(app)
 
