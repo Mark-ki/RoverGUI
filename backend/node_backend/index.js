@@ -1,5 +1,6 @@
 const express = require("express");
 const http = require("http");
+const path = require('path');
 const { Server } = require("socket.io");
 const cors = require("cors");
 // const pty = require("node-pty-prebuilt-multiarch");
@@ -8,6 +9,7 @@ const os = require("os");
 
 const app = express();
 app.use(cors());
+app.use(express.static(path.join(__dirname, 'public')));
 app.get("/", (req, res) => res.send("Xterm backend running ✅"));
 
 const server = http.createServer(app);

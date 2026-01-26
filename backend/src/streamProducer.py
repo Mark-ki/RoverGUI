@@ -6,78 +6,112 @@ import time
 import argparse
 import subprocess
 import ipaddress
+import threading
+import signal
+from typing import List
 
-# BROADCAST_IP = subprocess.check_output('hostname -I', shell=True).decode().split(" ")[0]
-# SUBNET_MASK = subprocess.check_output('ip addr show', shell=True).decode().split(f"inet {BROADCAST_IP}/")[-1].split(" ")[0]
-# DISCOVERY_IP = ipaddress.IPv4Network(f"{BROADCAST_IP}/{SUBNET_MASK}", strict=False).broadcast_address.exploded
+class BroadcastConfig:
+    def __init__(self, port: int, camera_id: int):
+        self.port = port
+        self.camera_id = camera_id
+        self.jpg_quality = 20
 
-# def broadcast_ip(discovery_port, discovery_timeout):
-#     broadcast_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-#     broadcast_socket.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, 1)
-
-#     connection_countdown = discovery_timeout  # seconds
-#     while connection_countdown > 0:
-#         broadcast_socket.sendto(f'IP_BROADCASTER:tcp://{BROADCAST_IP}:{discovery_port}'.encode('utf8'), (DISCOVERY_IP, discovery_port))
-#         time.sleep(1)
-#         connection_countdown -= 1
-
-def broadcast_camera_data(port, camera_id):
+def broadcast_camera_data(config: BroadcastConfig, stop_event: threading.Event):
+    # Publish frames from a single camera on tcp://*:{port} until stop_event is set.
     context = zmq.Context()
     footage_socket = context.socket(zmq.PUB)
-    footage_socket.bind(f'tcp://*:{port}') # 172.20.10.3
+    bind_addr = f'tcp://*:{config.port}'
+    print(f"[stream-{config.port}] Binding PUB socket to {bind_addr}")
+    footage_socket.bind(bind_addr) # 172.20.10.3
 
-    footage_socket2 = context.socket(zmq.PUB)
-    footage_socket2.bind(f'tcp://*:{5556}') # 172.20.10.3
-
-    footage_socket3 = context.socket(zmq.PUB)
-    footage_socket3.bind(f'tcp://*:{5557}') # 172.20.10.3
-
-    footage_socket4 = context.socket(zmq.PUB)
-    footage_socket4.bind(f'tcp://*:{5558}') # 172.20.10.3
-
-    camera = cv2.VideoCapture(camera_id)  # init the camera
+    camera = cv2.VideoCapture(config.camera_id)  # init the camera
     camera.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
     camera.set(cv2.CAP_PROP_FRAME_HEIGHT, 640)
 
-    while True:
-        try:
+    print(f"[stream-{config.port}] Camera {config.camera_id} opened: {camera.isOpened()}")
+    frame_count = 0
+    try:
+        while not stop_event.is_set():
             grabbed, frame = camera.read()  # grab the current frame
-            encoded, buffer = cv2.imencode('.jpg', frame)
-            jpg_as_text = base64.b64encode(buffer)
-            footage_socket.send(jpg_as_text)
-            footage_socket2.send(jpg_as_text)
-            footage_socket3.send(jpg_as_text)
-            footage_socket4.send(jpg_as_text)
+            frame_count += 1
+            if not grabbed or frame is None:
+                if frame_count % 50 == 0:
+                    print(f"[stream-{config.port}] frame {frame_count}: camera read failed (grabbed={grabbed})")
+                time.sleep(0.1)
+                continue
 
-        except KeyboardInterrupt:
-            camera.release()
-            cv2.destroyAllWindows()
-            break
+            # encode
+            encoded, buffer = cv2.imencode('.jpg', frame, [cv2.IMWRITE_JPEG_QUALITY, config.jpg_quality])
+            if not encoded:
+                if frame_count % 50 == 0:
+                    print(f"[stream-{config.port}] frame {frame_count}: encoding failed")
+                continue
+            jpg_as_text = base64.b64encode(buffer)
+
+            try:
+                footage_socket.send(jpg_as_text)
+            except zmq.ZMQError as e:
+                print(f"[stream-{config.port}] ZMQ send error: {e}")
+                break
+    finally:
+        print(f"[stream-{config.port}] cleaning up camera and socket (frames sent: {frame_count})")
+        camera.release()
+        cv2.destroyAllWindows()
+        try:
+            footage_socket.close()
+        except Exception as e:
+            print(f"[stream-{config.port}] error closing socket: {e}")
+        try:
+            context.term()
+        except Exception as e:
+            print(f"[stream-{config.port}] error terminating context: {e}")
+
+def start_multiple_streams(base_port: int, camera_ids: List[int]):
+    ###
+    # Start a publisher for each camera_id on ports base_port + index.
+    #
+    # Returns (stop_event, threads).
+    ###
+    stop_event = threading.Event()
+    threads: List[threading.Thread] = []
+
+    for idx, cam_id in enumerate(camera_ids):
+        port = base_port + idx
+        print(f"[main] Starting thread for camera {cam_id} on port {port}")
+        broadcast_config = BroadcastConfig(port=port, camera_id=cam_id)
+        t = threading.Thread(target=broadcast_camera_data, args=(broadcast_config, stop_event), daemon=True)
+        t.start()
+        threads.append(t)
+        print(f"Started camera {cam_id} on port {port}")
+
+    return stop_event, threads
 
 if __name__ == "__main__":
-    # Necessary arguments:
-    # - auto-ip-discovery
-    # - discovery-port
-    # - discovery-timeout
-    # - broadcast-port
-    # - camera-id
-    parser = argparse.ArgumentParser(prog='opencv_streamer', description='Streams camera data using opencv2')
-    parser.add_argument('--auto-ip-discovery', default="off")
-    parser.add_argument('--discovery-port', type=int, default=5556)
-    parser.add_argument('--discovery-timeout', type=int, default=15)
-    parser.add_argument('--broadcast-port', type=int, default=5555)
-    parser.add_argument('--camera-id', type=int, default=0)
+    parser = argparse.ArgumentParser(prog='camera_streamer', description='Streams one or more cameras using OpenCV over ZMQ')
+    parser.add_argument('--base-port', type=int, default=5555, help='Starting port for the first camera. Subsequent cameras use base-port+index')
+    parser.add_argument('--camera-ids', type=int, nargs='+', default=[0], help='List of camera IDs to stream (example: --camera-ids 0 1 2)')
 
     args = parser.parse_args()
-    auto_ip_discovery = args.auto_ip_discovery == "on"
-    discovery_port = args.discovery_port
-    discovery_timeout = args.discovery_timeout
-    broadcast_port = args.broadcast_port
-    camera_id = args.camera_id
 
-    # if auto_ip_discovery:
-    #     print(f"Broadcasting IP on port {discovery_port} for {discovery_timeout} seconds...")
-    #     broadcast_ip(discovery_port, discovery_timeout)
-    print(f"Starting camera stream on port {broadcast_port}...")
-    broadcast_camera_data(broadcast_port, camera_id)
-    
+    base_port = args.base_port
+    camera_ids = args.camera_ids
+
+    stop_event, threads = start_multiple_streams(base_port, camera_ids)
+
+    def _signal_handler(signum, frame):
+        print('Stopping streams...')
+        stop_event.set()
+
+    signal.signal(signal.SIGINT, _signal_handler)
+    signal.signal(signal.SIGTERM, _signal_handler)
+
+    try:
+        for t in threads:
+            while t.is_alive():
+                t.join(timeout=0.5)
+    except KeyboardInterrupt:
+        stop_event.set()
+        for t in threads:
+            t.join()
+
+    print('All streams stopped')

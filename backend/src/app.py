@@ -9,14 +9,20 @@ import threading
 
 from flask_socketio import SocketIO, emit
 import os
-# import pty
+import pty  # Ensure this is uncommented if you're using it below
 import threading
-#import eventlet
-#eventlet.monkey_patch()  
+
+# Resolved Conflict: Standardized the commented-out eventlet import
+# import eventlet
+# eventlet.monkey_patch()  
+
 app = Flask(__name__)
 CORS(app)
 
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet")  # async_mode defaults to 'threading'
+# Note: You have async_mode="eventlet" here. 
+# If you don't use eventlet, you might want to change this to "threading" 
+# or install eventlet via pip.
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode="eventlet") 
 
 sessions = {}
 
@@ -26,9 +32,7 @@ def read_and_emit_output(fd, sid):
             data = os.read(fd, 1024)
             if not data:
                 break
-
             data = data.decode(errors="ignore")
-
             socketio.emit("output", data, to=sid)
         except OSError:
             break
@@ -36,6 +40,7 @@ def read_and_emit_output(fd, sid):
 @socketio.on("connect")
 def handle_connect():
     sid = request.sid
+    # This requires the 'pty' module to be imported
     pid, fd = pty.fork()
 
     if pid == 0:
@@ -78,7 +83,6 @@ def index():
 def send_js(path):
     return send_from_directory('js', path)
 
-
 @app.route('/assets/<path:path>')
 def send_assets(path):
     return send_from_directory('../assets', path)
@@ -97,17 +101,5 @@ def get_ip():
     ip = get_local_ip()
     return jsonify({"ip": ip})
 
-# def generateMap():
-#     robot_location = {"lat": 38.3753855364, "lon": -110.8302205892}
-#     m = folium.Map(location=[robot_location["lat"], robot_location["lon"]], zoom_start=12)
-#     m.save("./templates/map.html")
-
-
-# @app.route('/ros/<path:path>')
-# def send_ros(path):
-#     return send_from_directory('./ros', path)
-
 if __name__ == '__main__':
-    # generateMap()
-    # app.run(host='0.0.0.0', port=5000, debug=True)
-    socketio.run(app, host="0.0.0.0", port=5000, debug=True) 
+    socketio.run(app, host="0.0.0.0", port=5000, debug=True)
