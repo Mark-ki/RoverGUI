@@ -3,19 +3,34 @@
 @defgroup wr_hci_hud wr_hci_hud
 @brief A package (currently empty) to act as a HUD for drivers
 
-Currently, the old GUI is in backend/ including a vanilla JS frontend. We are moving to React.js, which is in frontend/ but will keep the Flask backend from backend/
+The old version of the GUI (With flask and vanilla JS) is in ./OldVersion
+The current version is ./frontend (React) and ./backend (Node)
 
-# To start the GUI from ./backend
+## To Start the GUI
+
+# Frontend
+
+In ./frontend, 
+
 npm install
-pip install -r requirements.txt
+npm run start
 
-run app.py in wr_hci_hud/src 
+# Backend
+
+In  ./backend
+
+npm install
+node index.js
 
 # To start ROS server
-Have ros2 humble installed and run
+The GUI uses Roslib to connect to Rosbridge, which must be running for ROS to work
+
+Have ros2 humble/jazzy installed, install rosbridge_server package, and run
 
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 
+
+# Currently moving video from webrtc to opencv
 # To start the Webrtc signalling server for video streaming
 Build gst-plugins-rs and source with
 
@@ -36,6 +51,11 @@ the ros.js file is currently publishing and then subscribing to the ros websocke
 
 The setup is done on the base station
 
+# To start the Old GUI from ./OldVersion
+npm install
+pip install -r requirements.txt
+
+run app.py in wr_hci_hud/src 
 
 ## History
 

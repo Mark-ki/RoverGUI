@@ -1,7 +1,17 @@
 {
+  "name": "node_backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "dependencies": {
-    "fs": "^0.0.1-security",
-    "hls.js": "^1.0.3-0.canary.7275",
+    "node-pty": "^1.1.0-beta39",
+    "node-pty-prebuilt-multiarch": "^0.10.1-pre.5",
     "http": "^0.0.1-security",
     "node-media-server": "^2.6.6",
     "roslib": "^1.4.1",

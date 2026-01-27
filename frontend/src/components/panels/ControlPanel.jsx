@@ -232,19 +232,8 @@
 // );
 import React, { useEffect, useRef, useState } from 'react';
 import { Ros, Topic } from 'roslib';
+import { useRosTopic } from '../../useRosTopic';
 
-// --- UTILS ---
-async function getHostIP() {
-  try {
-    const resp = await fetch('/get-ip');
-    if (!resp.ok) throw new Error('IP fetch failed');
-    const data = await resp.json();
-    return data.ip;
-  } catch (err) {
-    console.warn('Falling back to localhost:', err);
-    return 'localhost';
-  }
-}
 
 // --- SUB-COMPONENTS ---
 
@@ -320,108 +309,120 @@ const Metric = ({ label, value, percent, color }) => {
 // --- MAIN COMPONENT ---
 
 const ControlPanel = () => {
-  const rosRef = useRef(null);
-  const reconnectRef = useRef(null);
+  // const rosRef = useRef(null);
+  // const reconnectRef = useRef(null);
 
-  const [rosConnected, setRosConnected] = useState(false);
-  const [rosConnecting, setRosConnecting] = useState(false);
+  // const [rosConnected, setRosConnected] = useState(false);
+  // const [rosConnecting, setRosConnecting] = useState(false);
 
-  // States
-  const [battery, setBattery] = useState(0);
-  const [ampere, setAmpere] = useState(0);
-  const [x, setX] = useState(0);
-  const [y, setY] = useState(0);
-  const [velX, setVelX] = useState(0);
-  const [velY, setVelY] = useState(0);
-  const [accel, setAccel] = useState(0);
-  const [distance, setDistance] = useState(0);
-  const [compass, setCompass] = useState(0);
+  // // States
+  // const [battery, setBattery] = useState(0);
+  // const [ampere, setAmpere] = useState(0);
+  // const [x, setX] = useState(0);
+  // const [y, setY] = useState(0);
+  // const [velX, setVelX] = useState(0);
+  // const [velY, setVelY] = useState(0);
+  // const [accel, setAccel] = useState(0);
+  // const [distance, setDistance] = useState(0);
+  // const [compass, setCompass] = useState(0);
 
-  useEffect(() => {
-    let mounted = true;
-    async function connectROS() {
-      setRosConnecting(true);
-      const ip = await getHostIP();
-      const url = `ws://${ip}:9090`;
-      const ros = new Ros({ url });
-      rosRef.current = ros;
+  // useEffect(() => {
+  //   let mounted = true;
+  //   async function connectROS() {
+  //     setRosConnecting(true);
+  //     const ip = await getHostIP();
+  //     const url = `ws://${ip}:9090`;
+  //     const ros = new Ros({ url });
+  //     rosRef.current = ros;
 
-      const onConnection = () => {
-        if (!mounted) return;
-        setRosConnected(true);
-        setRosConnecting(false);
-        if (reconnectRef.current) clearInterval(reconnectRef.current);
-      };
+  //     const onConnection = () => {
+  //       if (!mounted) return;
+  //       setRosConnected(true);
+  //       setRosConnecting(false);
+  //       if (reconnectRef.current) clearInterval(reconnectRef.current);
+  //     };
 
-      const onError = () => {
-        if (!mounted) return;
-        setRosConnected(false);
-        setRosConnecting(false);
-      };
+  //     const onError = () => {
+  //       if (!mounted) return;
+  //       setRosConnected(false);
+  //       setRosConnecting(false);
+  //     };
 
-      const onClose = () => {
-        if (!mounted) return;
-        setRosConnected(false);
-        setRosConnecting(false);
-        startReconnect(url);
-      };
+  //     const onClose = () => {
+  //       if (!mounted) return;
+  //       setRosConnected(false);
+  //       setRosConnecting(false);
+  //       startReconnect(url);
+  //     };
 
-      function startReconnect(wsUrl) {
-        if (reconnectRef.current) return;
-        reconnectRef.current = setInterval(() => {
-          try {
-            const newRos = new Ros({ url: wsUrl });
-            rosRef.current = newRos;
-            newRos.on('connection', onConnection);
-            newRos.on('error', onError);
-            newRos.on('close', onClose);
-          } catch (e) { console.error(e); }
-        }, 2000);
-      }
+  //     function startReconnect(wsUrl) {
+  //       if (reconnectRef.current) return;
+  //       reconnectRef.current = setInterval(() => {
+  //         try {
+  //           const newRos = new Ros({ url: wsUrl });
+  //           rosRef.current = newRos;
+  //           newRos.on('connection', onConnection);
+  //           newRos.on('error', onError);
+  //           newRos.on('close', onClose);
+  //         } catch (e) { console.error(e); }
+  //       }, 2000);
+  //     }
 
-      ros.on('connection', onConnection);
-      ros.on('error', onError);
-      ros.on('close', onClose);
-    }
-    connectROS();
-    return () => {
-      mounted = false;
-      if (reconnectRef.current) clearInterval(reconnectRef.current);
-      if (rosRef.current) rosRef.current.close();
-    };
-  }, []);
+  //     ros.on('connection', onConnection);
+  //     ros.on('error', onError);
+  //     ros.on('close', onClose);
+  //   }
+  //   connectROS();
+  //   return () => {
+  //     mounted = false;
+  //     if (reconnectRef.current) clearInterval(reconnectRef.current);
+  //     if (rosRef.current) rosRef.current.close();
+  //   };
+  // }, []);
 
-  useEffect(() => {
-    if (!rosRef.current || !rosConnected) return;
-    const topics = {
-      battery: new Topic({ ros: rosRef.current, name: '/voltage', messageType: 'std_msgs/Float32' }),
-      ampere: new Topic({ ros: rosRef.current, name: '/ampere', messageType: 'std_msgs/Float32' }),
-      x: new Topic({ ros: rosRef.current, name: '/xcoordinates', messageType: 'std_msgs/Float32' }),
-      y: new Topic({ ros: rosRef.current, name: '/ycoordinates', messageType: 'std_msgs/Float32' }),
-      velX: new Topic({ ros: rosRef.current, name: '/xvelocity', messageType: 'std_msgs/Float32' }),
-      velY: new Topic({ ros: rosRef.current, name: '/yvelocity', messageType: 'std_msgs/Float32' }),
-      accel: new Topic({ ros: rosRef.current, name: '/acceleration', messageType: 'std_msgs/Float32' }),
-      distance: new Topic({ ros: rosRef.current, name: '/distance', messageType: 'std_msgs/Float32' }),
-      compass: new Topic({ ros: rosRef.current, name: '/compass_data_topic', messageType: 'std_msgs/Float64' }),
-    };
+  // useEffect(() => {
+  //   if (!rosRef.current || !rosConnected) return;
+  //   const topics = {
+  //     battery: new Topic({ ros: rosRef.current, name: '/voltage', messageType: 'std_msgs/Float32' }),
+  //     ampere: new Topic({ ros: rosRef.current, name: '/ampere', messageType: 'std_msgs/Float32' }),
+  //     x: new Topic({ ros: rosRef.current, name: '/xcoordinates', messageType: 'std_msgs/Float32' }),
+  //     y: new Topic({ ros: rosRef.current, name: '/ycoordinates', messageType: 'std_msgs/Float32' }),
+  //     velX: new Topic({ ros: rosRef.current, name: '/xvelocity', messageType: 'std_msgs/Float32' }),
+  //     velY: new Topic({ ros: rosRef.current, name: '/yvelocity', messageType: 'std_msgs/Float32' }),
+  //     accel: new Topic({ ros: rosRef.current, name: '/acceleration', messageType: 'std_msgs/Float32' }),
+  //     distance: new Topic({ ros: rosRef.current, name: '/distance', messageType: 'std_msgs/Float32' }),
+  //     compass: new Topic({ ros: rosRef.current, name: '/compass_data_topic', messageType: 'std_msgs/Float64' }),
+  //   };
 
-    topics.battery.subscribe(msg => setBattery(msg.data));
-    topics.ampere.subscribe(msg => setAmpere(msg.data));
-    topics.x.subscribe(msg => setX(msg.data));
-    topics.y.subscribe(msg => setY(msg.data));
-    topics.velX.subscribe(msg => setVelX(msg.data));
-    topics.velY.subscribe(msg => setVelY(msg.data));
-    topics.accel.subscribe(msg => setAccel(msg.data));
-    topics.distance.subscribe(msg => setDistance(msg.data));
-    topics.compass.subscribe(msg => setCompass(msg.data));
+  //   topics.battery.subscribe(msg => setBattery(msg.data));
+  //   topics.ampere.subscribe(msg => setAmpere(msg.data));
+  //   topics.x.subscribe(msg => setX(msg.data));
+  //   topics.y.subscribe(msg => setY(msg.data));
+  //   topics.velX.subscribe(msg => setVelX(msg.data));
+  //   topics.velY.subscribe(msg => setVelY(msg.data));
+  //   topics.accel.subscribe(msg => setAccel(msg.data));
+  //   topics.distance.subscribe(msg => setDistance(msg.data));
+  //   topics.compass.subscribe(msg => setCompass(msg.data));
 
-    return () => Object.values(topics).forEach(t => t.unsubscribe());
-  }, [rosConnected]);
+  //   return () => Object.values(topics).forEach(t => t.unsubscribe());
+  // }, [rosConnected]);
 
-  const emergencyStop = () => {
-    if (!rosRef.current || !rosConnected) return;
-    const cmdVel = new Topic({ ros: rosRef.current, name: '/cmd_vel', messageType: 'geometry_msgs/Twist' });
-    cmdVel.publish({ linear: { x: 0, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } });
+  // const emergencyStop = () => {
+  //   if (!rosRef.current || !rosConnected) return;
+  //   const cmdVel = new Topic({ ros: rosRef.current, name: '/cmd_vel', messageType: 'geometry_msgs/Twist' });
+  //   cmdVel.publish({ linear: { x: 0, y: 0, z: 0 }, angular: { x: 0, y: 0, z: 0 } });
+  // };
+
+  const CoordinatesX = () => {
+    const coord = useRosTopic('/coord', 'geometry_msgs/Point', 50);
+
+    if (!coord) return <div>Stopped</div>;
+
+    return (
+      <div>
+        <DataBox label="Coord X" value={coord.x.toFixed(2)} />
+      </div>
+    );
   };
 
   return (
@@ -430,7 +431,7 @@ const ControlPanel = () => {
       {/* HEADER */}
       <div className="flex justify-between items-center pb-3 border-b border-slate-700">
         <h3 className="text-xl text-white font-black uppercase tracking-tighter">Robot Control Panel</h3>
-        <div className="text-xs">
+        {/* <div className="text-xs">
           {rosConnected ? (
             <span className="bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20 font-bold">● ROS Connected</span>
           ) : rosConnecting ? (
@@ -438,7 +439,7 @@ const ControlPanel = () => {
           ) : (
             <span className="bg-red-500/10 text-red-400 px-2 py-1 rounded border border-red-500/20 font-bold">○ Disconnected</span>
           )}
-        </div>
+        </div> */}
       </div>
 
       {/* CENTER SECTION */}
@@ -447,13 +448,13 @@ const ControlPanel = () => {
         {/* LEFT: Power Panel */}
         <div className="bg-slate-800 p-4 border border-slate-700 flex flex-col justify-between rounded shadow-xl">
           <h4 className="text-[10px] text-slate-400 font-black uppercase mb-4 tracking-widest border-l-2 border-slate-500 pl-2">Power Management</h4>
-          <div className="space-y-6">
+          {/* <div className="space-y-6">
             <Metric label="BATTERY" value={`${battery.toFixed(1)}V`} percent={Math.min(battery * 8, 100)} color="yellow" />
             <Metric label="LOAD" value={`${ampere.toFixed(1)}A`} percent={Math.min(ampere * 20, 100)} color="green" />
           </div>
           <button onClick={emergencyStop} className="w-full bg-red-600 text-white py-3 mt-6 hover:bg-red-500 font-black rounded shadow-lg uppercase text-sm tracking-widest transition-all active:scale-95">
             Emergency Stop
-          </button>
+          </button> */}
         </div>
 
         {/* RIGHT: High-Fidelity Diagnostic Panel */}
@@ -467,20 +468,20 @@ const ControlPanel = () => {
             {/* Sensor Column with Gaps */}
             <div className="flex flex-col gap-6"> 
               <div className="grid grid-cols-2 gap-2">
-                <DataBox label="Coord X" value={x.toFixed(2)} />
-                <DataBox label="Coord Y" value={y.toFixed(2)} />
+                {CoordinatesX()}
+                {/* <DataBox label="Coord Y" value={y.toFixed(2)} /> */}
               </div>
-              <div className="flex flex-col gap-4"> 
+              {/* <div className="flex flex-col gap-4"> 
                 <DataBox label="Distance" value={`${distance.toFixed(1)}m`} />
                 <DataBox label="Acceleration" value={accel.toFixed(1)} />
                 <DataBox label="Temperature" value="35.2°C" />
-              </div>
+              </div> */}
             </div>
 
             {/* Compass Section */}
-            <div className="border-l border-slate-700 h-full flex items-center justify-center pl-6">
-              <Compass degrees={compass} />
-            </div>
+            {/* <div className="border-l border-slate-700 h-full flex items-center justify-center pl-6"> */}
+              {/* <Compass degrees={compass} /> */}
+            {/* </div> */}
           </div>
         </div>
       </div>
@@ -489,10 +490,10 @@ const ControlPanel = () => {
       <div className="bg-slate-800 p-4 border border-slate-700 rounded shadow-lg">
         <h4 className="text-[10px] text-slate-500 font-black uppercase mb-3 tracking-widest">Kinematics Engine</h4>
         <div className="grid grid-cols-4 gap-2">
-          <DataBox label="Velocity X" value={`${velX.toFixed(2)} m/s`} />
+          {/* <DataBox label="Velocity X" value={`${velX.toFixed(2)} m/s`} />
           <DataBox label="Velocity Y" value={`${velY.toFixed(2)} m/s`} />
           <DataBox label="Motor Temp A" value="24.1°C" /> 
-          <DataBox label="Motor Temp B" value="25.5°C" /> 
+          <DataBox label="Motor Temp B" value="25.5°C" />  */}
         </div>
       </div>
     </div>
