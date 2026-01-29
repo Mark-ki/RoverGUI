@@ -14,3 +14,31 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* The container and the xterm viewport */
+.custom-terminal-scrollbar .xterm-viewport::-webkit-scrollbar,
+.custom-terminal-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* The Track (Background) */
+.custom-terminal-scrollbar .xterm-viewport::-webkit-scrollbar-track,
+.custom-terminal-scrollbar::-webkit-scrollbar-track {
+  background: rgb(10, 12, 20); /* Slightly darker than your bg */
+}
+
+/* The Thumb (The draggable bit) */
+.custom-terminal-scrollbar .xterm-viewport::-webkit-scrollbar-thumb,
+.custom-terminal-scrollbar::-webkit-scrollbar-thumb {
+  background: #334155; /* slate-700 */
+  border-radius: 10px;
+  border: 1px solid transparent;
+}
+
+/* Thumb on Hover - subtle green glow to match your tactical theme */
+.custom-terminal-scrollbar .xterm-viewport::-webkit-scrollbar-thumb:hover,
+.custom-terminal-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #475569; /* slate-600 */
+  border: 1px solid #10b981; /* green-500 edge */
+}

@@ -60,6 +60,7 @@ const ConsolePanel = (props) => {
   return (
     <div
       ref={ref}
+      className="custom-terminal-scrollbar"
       style={{
         width: "100%",
         height: "100%",

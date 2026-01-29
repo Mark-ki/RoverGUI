@@ -21,7 +21,7 @@ const RoverControlInterface = () => {
 
   const injectCommand = (targetId, cmd) => {
     const targetTerminal = terminalRegistry.current[targetId];
-    if (targetTerminal) {
+    if (targetTerminal && cmd != '') {
       targetTerminal.execute(cmd);
     } else {
       console.error(`Terminal ${targetId} not found or not initialized.`);

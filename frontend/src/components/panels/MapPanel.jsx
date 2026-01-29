@@ -31,7 +31,7 @@ const MapPanel = () => {
             width="400" 
             height="300" 
             preserveAspectRatio="xMidYMid slice"
-            className="opacity-50" // Dimmed slightly more for better UI contrast
+            className="opacity-90" // Dimmed slightly more for better UI contrast
             style={{ filter: 'brightness(0.8) contrast(1.2)' }}
           />
 

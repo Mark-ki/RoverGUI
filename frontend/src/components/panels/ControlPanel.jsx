@@ -35,10 +35,19 @@ const ControlPanel = ( {onAction} ) => {
 
   const [activeControlTab, setActiveControlTab] = useState('Launch');
 
+  const [activeLaunchButton, setActiveLaunchButton] = useState(null);
+
   const LaunchButton = ({terminal=1, command, children }) => (
     <button
-      onClick={() => onAction("Terminal " + terminal, command)}
-      className="w-full bg-red-600 text-white py-2 hover:bg-red-700 font-bold rounded"
+      onClick={() => {
+        onAction("Terminal " + terminal, command);
+        setActiveLaunchButton(activeLaunchButton === command ? null : command);
+      }}
+      className={`w-full py-2 font-bold rounded transition-colors ${
+        activeLaunchButton === command
+          ? 'bg-green-600 text-white hover:bg-green-700'
+          : 'bg-gray-600 text-white hover:bg-gray-700'
+      }`}
     >
       {children}
     </button>
@@ -139,21 +148,20 @@ const ControlPanel = ( {onAction} ) => {
     topics.distance.subscribe(msg => setDistance(msg.data));
     topics.compass.subscribe(msg => setCompass(msg.data));
 
+    setInterval(() => {
+      topics.x.publish({data: Math.random() * 10});
+      topics.y.publish({data: Math.random() * 10});
+      topics.velX.publish({data: Math.random() * 10});
+      topics.velY.publish({data: Math.random() * 10});
+      topics.accel.publish({data: Math.random() * 10});
+      topics.distance.publish({data: Math.random() * 10});
+    }, 2000);
+    topics.ampere.publish({data: Math.random() * 10});
+    topics.battery.publish({data: Math.random() * 10});
+    
     return () => Object.values(topics).forEach(t => t.unsubscribe());
   }, [rosConnected]);
 
-  // ---------------- EMERGENCY STOP ----------------
-  const emergencyStop = () => {
-    if (!rosRef.current || !rosConnected) return;
-    const cmdVel = new Topic({ ros: rosRef.current, name: '/cmd_vel', messageType: 'geometry_msgs/Twist' });
-    cmdVel.publish({
-      linear: { x: 0, y: 0, z: 0 },
-      angular: { x: 0, y: 0, z: 0 }
-    });
-    console.log('EMERGENCY STOP SENT');
-  };
-
-  // ---------------- UI ----------------
   return (
     <div className="bg-slate-900 border border-slate-700 h-full">
       <div className="bg-slate-800 border-b border-slate-700 flex justify-between px-2">
@@ -201,9 +209,10 @@ const ControlPanel = ( {onAction} ) => {
             <LaunchButton command="Science Rover" terminal={2}>
               Science Rover
             </LaunchButton>
+            
             <button
-              onClick={emergencyStop}
-              className="w-full bg-red-600 text-white py-1 text-xs hover:bg-red-700"
+              className="w-full bg-red-600 text-white py-1 text-xs hover:bg-red-700 rounded"
+              onClick={() => setActiveLaunchButton(null)}
             >
               EMERGENCY STOP
             </button>
@@ -214,8 +223,8 @@ const ControlPanel = ( {onAction} ) => {
           <div className="grid grid-cols-2 gap-2 text-xs">
              
             <DataBox label="DIST" value={`${distance.toFixed(2)} m`} />
-            <DataBox label="X" value={`${velX.toFixed(2)} m/s`} />
-            <DataBox label="Y" value={`${velY.toFixed(2)} m/s`} />
+            <DataBox label="X" value={`${x.toFixed(2)} m/s`} />
+            <DataBox label="Y" value={`${y.toFixed(2)} m/s`} />
             <DataBox label="ACC" value={`${accel.toFixed(2)} m/s²`} />
             <DataBox label="Compass" value={`${compass.toFixed(1)}°`} />
             <DataBox label="VEL X" value={`${velX.toFixed(2)} m/s`} />
