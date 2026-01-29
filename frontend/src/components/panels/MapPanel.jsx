@@ -1,4 +1,5 @@
 import React from "react";
+import mapImg from '../../assets/map.jpg';
 
 const MapPanel = () => {
   return (
@@ -25,18 +26,27 @@ const MapPanel = () => {
             <line key={`h${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#374151" strokeWidth="0.5" />
           ))}
 
+          <image 
+            href={mapImg} 
+            width="400" 
+            height="300" 
+            preserveAspectRatio="xMidYMid slice"
+            className="opacity-50" // Dimmed slightly more for better UI contrast
+            style={{ filter: 'brightness(0.8) contrast(1.2)' }}
+          />
+
           {/* Path trace */}
-          <polyline
+          {/* <polyline
             points="50,250 100,200 150,180 200,160 250,140 300,120"
             fill="none"
             stroke="#10b981"
             strokeWidth="2"
             strokeDasharray="3,2"
-          />
+          /> */}
 
           {/* Rover position */}
           <circle cx="300" cy="120" r="4" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
-          <text x="310" y="125" fill="#10b981" fontSize="8">
+          <text x="310" y="125" fill="#000000" fontSize="8">
             ROVER
           </text>
 
@@ -47,8 +57,8 @@ const MapPanel = () => {
           </text>
 
           {/* Obstacles */}
-          <rect x="180" y="200" width="20" height="15" fill="#ef4444" opacity="0.5" />
-          <rect x="220" y="180" width="15" height="20" fill="#ef4444" opacity="0.5" />
+          {/* <rect x="180" y="200" width="20" height="15" fill="#ef4444" opacity="0.5" />
+          <rect x="220" y="180" width="15" height="20" fill="#ef4444" opacity="0.5" /> */}
         </svg>
 
         {/* Map controls */}
