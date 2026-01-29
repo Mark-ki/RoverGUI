@@ -37,7 +37,7 @@ const ControlPanel = ( {onAction} ) => {
 
   const LaunchButton = ({terminal=1, command, children }) => (
     <button
-      onClick={() => onAction("tab" + terminal, command)}
+      onClick={() => onAction("Terminal " + terminal, command)}
       className="w-full bg-red-600 text-white py-2 hover:bg-red-700 font-bold rounded"
     >
       {children}

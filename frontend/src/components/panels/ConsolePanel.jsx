@@ -11,13 +11,15 @@ const ConsolePanel = (props) => {
     if (!instance) return;
 
     if (props.onInit) {
-    props.onInit({
-      execute: (cmd) => {
-        // We add \r to simulate hitting the "Enter" key
-        socket.emit("input", cmd + "\r"); 
-      }
-    });
-  }
+      props.onInit({
+        execute: (cmd) => {
+          // We add \r to simulate hitting the "Enter" key
+          socket.emit("input", cmd + "\r"); 
+          }
+      });
+    }
+
+    instance.resize(55, 22);
 
     // Connect to your Node backend
     const socket = io("http://localhost:3001"); // ✅ Node backend port
@@ -61,7 +63,8 @@ const ConsolePanel = (props) => {
       style={{
         width: "100%",
         height: "100%",
-        backgroundColor: "#1e1e1e",
+        padding: "10px",
+        backgroundColor: "rgb(16, 20, 32)",
       }}
     />
   );
