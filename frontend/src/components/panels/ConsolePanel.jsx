@@ -3,12 +3,21 @@ import { useXTerm } from "react-xtermjs";
 import { io } from "socket.io-client";
 import "xterm/css/xterm.css";
 
-const ConsolePanel = () => {
+const ConsolePanel = (props) => {
   const { instance, ref } = useXTerm();
   const socketRef = useRef(null);
 
   useEffect(() => {
     if (!instance) return;
+
+    if (props.onInit) {
+    props.onInit({
+      execute: (cmd) => {
+        // We add \r to simulate hitting the "Enter" key
+        socket.emit("input", cmd + "\r"); 
+      }
+    });
+  }
 
     // Connect to your Node backend
     const socket = io("http://localhost:3001"); // ✅ Node backend port

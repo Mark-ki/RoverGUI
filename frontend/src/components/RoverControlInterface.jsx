@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Battery, Compass, MapPin, Zap, Activity, Wifi, WifiOff, Settings, Camera, Map, Navigation } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import '../output.css';
@@ -12,6 +12,22 @@ import TerminalTabs from './TerminalTabs';
 
 
 const RoverControlInterface = () => {
+
+  const terminalRegistry = useRef({});
+
+  const registerTerminal = (id, instance) => {
+    terminalRegistry.current[id] = instance;
+  };
+
+  const injectCommand = (targetId, cmd) => {
+    const targetTerminal = terminalRegistry.current[targetId];
+    if (targetTerminal) {
+      targetTerminal.execute(cmd);
+    } else {
+      console.error(`Terminal ${targetId} not found or not initialized.`);
+    }
+  };
+
   return (
     <div className="bg-black text-green-400 h-screen p-2 font-mono text-xs overflow-hidden flex flex-col space-y-2"> 
       <Header></Header> 
@@ -25,7 +41,7 @@ const RoverControlInterface = () => {
           
           {/* Control Tabs */} 
           <Panel className="panel">
-          <ControlPanel /> 
+          <ControlPanel onAction={injectCommand}/> 
           </Panel>
 
           <PanelResizeHandle className="h-2">
@@ -34,7 +50,7 @@ const RoverControlInterface = () => {
 
           {/* Diagnostics */} 
           <Panel className="panel">
-          <TerminalTabs /> 
+          <TerminalTabs onTerminalInit={registerTerminal}/> 
           </Panel>
           
           </PanelGroup>

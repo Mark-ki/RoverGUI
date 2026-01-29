@@ -1,7 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useCallback } from "react";
 import ConsolePanel from "./panels/ConsolePanel";
 
-const TerminalTabs = () => {
+const TerminalTabs = ({onTerminalInit}) => {
   const [activeTab, setActiveTab] = useState("tab1");
 
   return (
@@ -39,7 +39,7 @@ const TerminalTabs = () => {
             display: activeTab === "tab1" ? "block" : "none",
           }}
         >
-          <ConsolePanel />
+          <ConsolePanel onInit={(inst) => onTerminalInit("tab1", inst)} />
         </div>
         <div
           style={{
@@ -48,7 +48,7 @@ const TerminalTabs = () => {
             display: activeTab === "tab2" ? "block" : "none",
           }}
         >
-          <ConsolePanel />
+          <ConsolePanel onInit={(inst) => onTerminalInit("tab2", inst)} />
         </div>
       </div>
     </div>
