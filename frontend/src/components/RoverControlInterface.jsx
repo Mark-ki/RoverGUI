@@ -7,6 +7,7 @@ import DiagnosticsPanel from './panels/DiagnosticPanel';
 import ControlPanel from './panels/ControlPanel';
 import MapPanel from './panels/MapPanel';
 import CameraPanel from './panels/CameraPanel';
+import TempCamWrapper from './panels/tempCamWrapper';
 import ConsolePanel from './panels/ConsolePanel';
 import TerminalTabs from './TerminalTabs';
 
@@ -61,7 +62,7 @@ const RoverControlInterface = () => {
           </PanelResizeHandle>
 
         <Panel className="panel" defaultSize={50}>
-        <CameraPanel /> 
+        <TempCamWrapper /> 
         </Panel>
       
         <PanelResizeHandle className="w-2">
