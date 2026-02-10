@@ -1,55 +1,63 @@
 # wr_hci_hud
 
 @defgroup wr_hci_hud wr_hci_hud
-@brief A package (currently empty) to act as a HUD for drivers
+@brief A package to act as a HUD for drivers
 
-The old version of the GUI (With flask and vanilla JS) is in ./OldVersion
+The deprecated version of the GUI (With flask and vanilla JS) is in ./OldVersion
 The current version is ./frontend (React) and ./backend (Node)
 
-## To Start the GUI
+## Current todo list
 
-# Frontend
+1. Map implementation
+2. Finalize ros topic names, change to global ros connection
+3. Emergency stop button and launch script name
+4. Make the GUI work for clients other than the host
 
-In ./frontend, 
+# To Start the GUI in 3 Easy Steps
+
+## Frontend
+
+In ./frontend
 
 npm install
 npm run start
 
-# Backend
+## Backend
 
 In  ./backend
 
 npm install
 node index.js
 
-# To start ROS server
+## To start ROS server
+
 The GUI uses Roslib to connect to Rosbridge, which must be running for ROS to work
 
 Have ros2 humble/jazzy installed, install rosbridge_server package, and run
 
+source /opt/ros/jazzy/setup.bash
 ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 
+Running the server with "delay_between_messages:=0.0" could fix a version error.
 
-# Currently moving video from webrtc to opencv
 # To start the Webrtc signalling server for video streaming
-Build gst-plugins-rs and source with
+1. Change the CameraPanel in the frontend to the gstreamer version.
 
-export GST_PLUGIN_PATH=[path to gst-plugins-rs]/target/debug:$GST_PLUGIN_PATH
+2. Build gst-plugins-rs and source with
+
+3. export GST_PLUGIN_PATH=[path to gst-plugins-rs]/target/debug:$GST_PLUGIN_PATH
 
 then run 
 
-cargo run --bin gst-webrtc-signalling-server
+4. cargo run --bin gst-webrtc-signalling-server
 
 The streamer would run something like this, which would go through the server and then to the GUI:
 
-gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" signaller::uri="ws://10.141.81.176:8443" mfvideosrc ! videoconvert ! vp8enc deadline=1 ! queue ! video/x-vp8 ! ws.   
-
+5. gst-launch-1.0 webrtcsink name=ws meta="meta,name=gst-stream" signaller::uri="ws://10.141.81.176:8443" mfvideosrc ! videoconvert ! vp8enc deadline=1 ! queue ! video/x-vp8 ! ws.   
 
 May have to set port 5000, 9090 inbound to open in firewall for multiple client 
 
-the ros.js file is currently publishing and then subscribing to the ros websocket to simulate actual input
-
-The setup is done on the base station
+the ros.js file is publishing and then subscribing to the ros websocket to simulate actual input
 
 # To start the Old GUI from ./OldVersion
 npm install

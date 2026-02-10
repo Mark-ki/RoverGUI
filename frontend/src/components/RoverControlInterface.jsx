@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useRef } from 'react';
 import { Battery, Compass, MapPin, Zap, Activity, Wifi, WifiOff, Settings, Camera, Map, Navigation } from 'lucide-react';
 import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import '../output.css';
@@ -6,8 +6,7 @@ import Header from './Header';
 import DiagnosticsPanel from './panels/DiagnosticPanel';
 import ControlPanel from './panels/ControlPanel';
 import MapPanel from './panels/MapPanel';
-import CameraPanel from './panels/CameraPanel';
-import TempCamWrapper from './panels/tempCamWrapper';
+import CameraPanel from './panels/CameraPanelCV';
 import ConsolePanel from './panels/ConsolePanel';
 import TerminalTabs from './TerminalTabs';
 
@@ -62,7 +61,7 @@ const RoverControlInterface = () => {
           </PanelResizeHandle>
 
         <Panel className="panel" defaultSize={50}>
-        <TempCamWrapper /> 
+        <CameraPanel /> 
         </Panel>
       
         <PanelResizeHandle className="w-2">

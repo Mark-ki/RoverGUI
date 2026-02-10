@@ -5,7 +5,7 @@ from streamReceiver import receive_stream
  
 stop_event = threading.Event()
 
-ports = [(8081, 5555), (8082, 5556), (8083, 5557), (8084, 5558)]  # List of ports to use for the WebSocket server
+ports = [(8081, 5555), (8082, 5556), (8083, 5557)]  # List of ports to use for the WebSocket server
 
 def run_receive_stream(port, streamPort):
     asyncio.run(receive_stream(port, stop_event, streamPort))

@@ -281,6 +281,7 @@ function useRosTopic(ros, name, type, defaultValue = 0) {
 
     const topic = new Topic({ ros, name, messageType: type });
     topic.subscribe(msg => setValue(msg.data));
+    topic.publish({data: 100}); 
 
     return () => topic.unsubscribe();
   }, [ros, name, type]);
@@ -450,7 +451,7 @@ const ControlPanel = ({ onAction }) => {
         onAction(`Terminal ${terminal}`, command);
         setActiveLaunchButton(activeLaunchButton === command ? null : command);
       }}
-      className={`w-full py-2 font-bold rounded ${
+      className={`w-full py-2 font-bold rounded text-white ${
         activeLaunchButton === command
           ? 'bg-green-600 hover:bg-green-700'
           : 'bg-gray-600 hover:bg-gray-700'
