@@ -40,6 +40,10 @@ ros2 launch rosbridge_server rosbridge_websocket_launch.xml
 
 Running the server with "delay_between_messages:=0.0" could fix a version error.
 
+### Testing the OpenCV Video streaming
+
+Install libraries and run streamProducer.py in ./OldVersion/src/
+
 # To start the Webrtc signalling server for video streaming
 1. Change the CameraPanel in the frontend to the gstreamer version.
 
