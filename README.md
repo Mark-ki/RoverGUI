@@ -45,7 +45,7 @@ Running the server with "delay_between_messages:=0.0" could fix a version error.
 Install libraries and run streamProducer.py in ./OldVersion/src/
 
 # To start the Webrtc signalling server for video streaming
-1. Change the CameraPanel in the frontend to the gstreamer version.
+1. Change the CameraPanel in the frontend to the gstreamer version. 
 
 2. Build gst-plugins-rs and source with
 
