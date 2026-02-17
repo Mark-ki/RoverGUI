@@ -1,14 +1,17 @@
 import React, { useEffect, useRef } from "react";
 import { useXTerm } from "react-xtermjs";
 import { io } from "socket.io-client";
+import { FitAddon } from "@xterm/addon-fit"; // 1. Import FitAddon
 import "xterm/css/xterm.css";
 
 const ConsolePanel = (props) => {
   const { instance, ref } = useXTerm();
   const socketRef = useRef(null);
+  const fitAddonRef = useRef(new FitAddon());
 
   useEffect(() => {
     if (!instance) return;
+    instance.loadAddon(fitAddonRef.current);
 
     if (props.onInit) {
       props.onInit({
@@ -18,8 +21,6 @@ const ConsolePanel = (props) => {
           }
       });
     }
-
-    instance.resize(55, 22);
 
     // Connect to your Node backend
     const socket = io("http://localhost:3001"); // ✅ Node backend port
@@ -44,17 +45,28 @@ const ConsolePanel = (props) => {
 
     // Handle terminal resize
     const handleResize = () => {
+      fitAddonRef.current.fit(); // Recalculate cols/rows based on UI
+      
+      // Tell the backend PTY the new dimensions
       socket.emit("resize", {
         cols: instance.cols,
         rows: instance.rows,
       });
     };
-    window.addEventListener("resize", handleResize);
+
+    const resizeObserver = new ResizeObserver(() => {
+      handleResize();
+    });
+
+    if (ref.current) {
+      resizeObserver.observe(ref.current);
+    }
 
     return () => {
-      window.removeEventListener("resize", handleResize);
+      resizeObserver.disconnect();
       socket.disconnect();
     };
+
   }, [instance]);
 
   return (
