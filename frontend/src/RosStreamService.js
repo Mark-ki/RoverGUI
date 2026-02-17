@@ -11,7 +11,7 @@ class RosService {
 
     this.ros.on('connection', () => {console.log('Connected to websocket'); this.rosConnected = true;});
     this.ros.on('error', (error) => console.log('Error connecting: ', error));
-    this.ros.on('close', () => console.log('Connection closed'));
+    this.ros.on('close', () => {console.log('Connection closed.'); this.rosConnected = false;});
     
     // var reconnectIntervalId = setInterval(function() {
     //     if(!this.rosConnected) {
@@ -78,6 +78,10 @@ class RosService {
         console.log(`No more listeners for ${topicName}, unsubscribed.`);
       }
     }
+  }
+
+  isConnected() {
+    return this.rosConnected;
   }
 }
 

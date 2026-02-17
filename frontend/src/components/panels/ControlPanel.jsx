@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Ros, Topic } from 'roslib';
 import TabButton from '../TabButton';
 import { useRosTopic } from '../../useRosTopic';
+import { connectionStatus } from '../../useRosTopic';
 
 /* ===================== UI COMPONENTS ===================== */
 const Metric = ({ label, value, percent, color }) => (
@@ -67,15 +68,12 @@ const Compass = ({ degrees }) => (
 
 /* ===================== MAIN COMPONENT ===================== */
 const ControlPanel = ({ onAction }) => {
-  const rosRef = useRef(null);
-  const reconnectRef = useRef(null);
 
   const [rosConnected, setRosConnected] = useState(false);
-  const [rosConnecting, setRosConnecting] = useState(false);
-
+  
   const [activeControlTab, setActiveControlTab] = useState('Launch');
   const [activeLaunchButton, setActiveLaunchButton] = useState(null);
-
+  
   /* ---------- ROS DATA ---------- */
   const battery = useRosTopic('/voltage', 'std_msgs/Float32');
   const ampere = useRosTopic('/ampere', 'std_msgs/Float32');
@@ -86,7 +84,15 @@ const ControlPanel = ({ onAction }) => {
   const accel = useRosTopic('/acceleration', 'std_msgs/Float32');
   const distance = useRosTopic('/distance', 'std_msgs/Float32');
   const compass = useRosTopic('/compass_data_topic', 'std_msgs/Float64');
-
+  
+    useEffect(() => {
+      const interval = setInterval(() => {
+        setRosConnected(connectionStatus());
+      }, 1000);
+      
+      return () => clearInterval(interval);
+    }, []);
+  
   /* ---------- LAUNCH BUTTON ---------- */
   const LaunchButton = ({ terminal = 1, command, children }) => (
     <button
@@ -124,9 +130,7 @@ const ControlPanel = ({ onAction }) => {
         <div className="text-xs flex items-center">
           {rosConnected
             ? <span className="text-green-400">ROS Connected</span>
-            : rosConnecting
-              ? <span className="text-yellow-400">Connecting...</span>
-              : <span className="text-red-400">Disconnected</span>
+            : <span className="text-red-400">Disconnected</span>
           }
         </div>
       </div>

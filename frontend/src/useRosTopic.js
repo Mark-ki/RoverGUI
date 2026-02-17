@@ -28,3 +28,7 @@ export const useRosTopic = (topicName, messageType, updateFrequency = 100) => {
 
   return data;
 };
+
+export const connectionStatus = () => {
+  return rosServiceInstance.isConnected();
+}
