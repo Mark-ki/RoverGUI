@@ -35,13 +35,12 @@ class RosService {
         messageType: messageType
       });
 
-
       // Temporary code to publish random x coordinates for testing
       setInterval(function() {
         topicListener.publish(({
-            x: Math.round(Math.random()*10, 2)
+            data: Math.round(Math.random()*100, 2)
         }));
-      }, 1000);
+      }, 2000);
 
       // 2. Define what happens when data comes in
       topicListener.subscribe((message) => {
