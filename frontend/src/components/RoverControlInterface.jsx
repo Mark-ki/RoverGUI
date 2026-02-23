@@ -11,7 +11,7 @@ import ConsolePanel from './panels/ConsolePanel';
 import TerminalTabs from './TerminalTabs';
 import RosImagePanel from './panels/TempDepthPanel';
 import { Ros } from 'roslib';
-import {rosServiceInstance} from '../RosStreamService';
+import {rosServiceInstance} from '../testRoverControlInterfaceService';
 
 
 const RoverControlInterface = () => {
