@@ -9,7 +9,9 @@ import MapPanel from './panels/MapPanel';
 import CameraPanel from './panels/CameraPanelCV';
 import ConsolePanel from './panels/ConsolePanel';
 import TerminalTabs from './TerminalTabs';
-import { rosServiceInstance } from '../RosStreamService';
+import RosImagePanel from './panels/TempDepthPanel';
+import { Ros } from 'roslib';
+import {rosServiceInstance} from '../RosStreamService';
 
 
 const RoverControlInterface = () => {
@@ -203,7 +205,8 @@ const RoverControlInterface = () => {
           </PanelResizeHandle>
 
         <Panel className="panel" defaultSize={50}>
-        <CameraPanel /> 
+        {/* <RosImagePanel topicName="/bottle_image" />  */}
+        <CameraPanel/>
         </Panel>
       
         <PanelResizeHandle className="w-2">
