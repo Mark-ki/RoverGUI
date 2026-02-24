@@ -8,12 +8,13 @@ The current version is ./frontend (React) and ./backend (Node)
 
 ## Current todo list
 
-1. Map implementation
-2. Finalize ros topic names, change to global ros connection
-3. Emergency stop button and launch script name
-4. Make the GUI work for clients other than the host
+1. Finalize ros topic names, change to global ros connection
+2. Emergency stop button and launch script name
+3. Make the GUI work for clients other than the host
 
 # To Start the GUI in 3 Easy Steps
+
+The base station already has a launch script that does all of this.
 
 ## Frontend
 
@@ -43,8 +44,9 @@ Running the server with "delay_between_messages:=0.0" could fix a version error.
 ### Testing the OpenCV Video streaming
 
 Install libraries and run streamProducer.py in ./OldVersion/src/
+Change the input port to match video source in index.js if necessary.
 
-# To start the Webrtc signalling server for video streaming
+# To start the (Deprecated) Webrtc signalling server for video streaming
 1. Change the CameraPanel in the frontend to the gstreamer version. 
 
 2. Build gst-plugins-rs and source with

@@ -7,6 +7,7 @@ function CameraPanelCV() {
   const [activeCameraTab, setActiveCameraTab] = useState('CAM1');
   const wsRef = useRef(null);
   const streamRefsRef = useRef({});
+  const [cameras, setCameras] = useState(["CAM1", "CAM2", "CAM3"]);
 
   // Map tabs to port indices (adjust ports based on your backend)
   const portList = Object.keys(streams).sort(); 
@@ -14,6 +15,20 @@ function CameraPanelCV() {
     const index = parseInt(camName.replace('CAM', '')) - 1;
     return portList[index];
   };
+
+  const addCameraTab = () => {
+    if(cameras.length >= 8) return; // Limit to 6 cameras
+    const newCamNumber = cameras.length + 1;
+    setCameras([...cameras, `CAM${newCamNumber}`]);
+  };
+
+  const removeCameraTab = () => {
+    
+    if (cameras.length > 2) {
+      setCameras(cameras.slice(0, -1));
+    }
+  };
+
 
   useEffect(() => {
     const ws = new WebSocket('ws://localhost:8081');
@@ -67,8 +82,8 @@ function CameraPanelCV() {
     <div className="bg-slate-900 border border-slate-700 h-full flex flex-col font-sans text-slate-200">
       {/* Tabs */}
       <div className="bg-slate-800 border-b border-slate-700 text-[10px] font-bold tracking-widest">
-        <div className="grid grid-cols-4">
-          {["CAM1", "CAM2", "CAM3", "FULL"].map((tab) => (
+        <div className="grid grid-cols-5">
+          {cameras.map((tab) => (
             <TabButton
               key={tab}
               active={activeCameraTab === tab}
@@ -77,6 +92,31 @@ function CameraPanelCV() {
               {tab}
             </TabButton>
           ))}
+
+          <TabButton
+            key="FULL"
+            active={activeCameraTab === "FULL"}
+            onClick={() => setActiveCameraTab("FULL")}
+          >
+            Full
+          </TabButton>
+
+          <div>
+
+          <TabButton
+            key="MINUS"
+            onClick={() => removeCameraTab()}
+          >
+            -
+          </TabButton>
+
+          <TabButton
+            key="PLUS"
+            onClick={() => addCameraTab()}
+          >
+            +
+          </TabButton>
+          </div>
         </div>
       </div>
 
@@ -94,7 +134,7 @@ function CameraPanelCV() {
 
               {/* Secondary Bottom Row (The other two cameras) */}
               <div className="grid grid-cols-2 gap-1">
-                {["CAM1", "CAM2", "CAM3"]
+                {cameras
                   .filter((cam) => cam !== activeCameraTab)
                   .map((cam) => (
                     <RenderStream 
@@ -108,12 +148,22 @@ function CameraPanelCV() {
             </div>
           ) : (
             /* Fullscreen Grid Layout */
-            <div className="grid grid-cols-3 gap-1 h-full">
-              <div className="flex flex-col gap-1 col-span-1">
+            <div className="grid grid-cols-3 gap-1 w-full">
+              {/* <div className="flex flex-col gap-1 col-span-1">
                 <RenderStream port={portList[0]} label="CAM1" className="flex-1" />
                 <RenderStream port={portList[1]} label="CAM2" className="flex-1" />
               </div>
               <RenderStream port={portList[2]} label="CAM3" className="col-span-2 aspect-video" />
+
+              map */}
+              {cameras.map((cam) => (
+                <RenderStream 
+                  key={cam}
+                  port={getPortByCam(cam)}
+                  label={cam}
+                  className="aspect-video"
+                />
+              ))}
             </div>
           )}
         </div>
