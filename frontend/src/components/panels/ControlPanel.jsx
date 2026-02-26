@@ -136,7 +136,7 @@ const ControlPanel = ({ onAction }) => {
       </div>
 
       {/* BODY */}
-      <div className="p-3 space-y-3">
+      <div className="p-3 space-y-3 overflow-auto h-100">
         {activeControlTab === 'Launch' && (
           <>
             <LaunchButton command="echo Base Station Manual">Base Station Manual</LaunchButton>
@@ -154,23 +154,64 @@ const ControlPanel = ({ onAction }) => {
           </>
         )}
 
-        {activeControlTab === 'Data' && (
-          <>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <DataBox label="DIST" value={`${distance?.data.toFixed(2)} m`} />
-              <DataBox label="X" value={`${x?.data.toFixed(2)} m/s`} />
-              <DataBox label="Y" value={`${y?.data.toFixed(2)} m/s`} />
-              <DataBox label="ACC" value={`${accel?.data.toFixed(2)} m/s²`} />
-              <DataBox label="VEL X" value={`${velX?.data.toFixed(2)} m/s`} />
-              <DataBox label="VEL Y" value={`${velY?.data.toFixed(2)} m/s`} />
+       {activeControlTab === 'Data' && (
+        <>
+            {/* ================= POSITION ================= */}
+            <div className="grid grid-cols-3 gap-2 text-xs mb-4">
+              {/* Column 1: Current Position */}
+              <div className="flex flex-col gap-2">
+                <div className="text-blue-500 uppercase tracking-widest font-bold text-center mb-1">
+                  Current Position
+                </div>
+                <DataBox label="X" value={`${x?.data?.toFixed(2) || 0} m`} />
+                <DataBox label="Y" value={`${y?.data?.toFixed(2) || 0} m`} />
+              </div>
 
-              <div className="col-span-2 space-y-2 mt-2">
-                <Metric label="AMPERE" value={`${ampere?.data.toFixed(1)} A`} percent={Math.min(ampere ? ampere * 10 : 0, 100)} color="green" />
-                <Metric label="BATTERY" value={`${battery?.data.toFixed(1)} V`} percent={Math.min(battery ? battery * 10 : 0, 100)} color="yellow" />
+              {/* Column 2: Current Motion */}
+              <div className="flex flex-col gap-2">
+                <div className="text-blue-500 uppercase tracking-widest font-bold text-center mb-1">
+                  Current Motion
+                </div>
+                <DataBox label="VEL X" value={`${velX?.data?.toFixed(2) || 0} m/s`} />
+                <DataBox label="VEL Y" value={`${velY?.data?.toFixed(2) || 0} m/s`} />
+              </div>
+
+              {/* Column 3: Navigation Dynamics */}
+              <div className="flex flex-col gap-2">
+                <div className="text-blue-500 uppercase tracking-widest font-bold text-center mb-1">
+                  Navigation Dynamics
+                </div>
+                <DataBox label="DIST" value={`${distance?.data?.toFixed(2) || 0} m`} />
+                <DataBox label="ACC" value={`${accel?.data?.toFixed(2) || 0} m/s²`} />
               </div>
             </div>
 
-            <div className="mt-6 flex justify-center">
+            {/* ================= POWER ================= */}
+            <div className="text-xs uppercase tracking-widest text-blue-500 font-bold mb-2">
+              Power Status
+            </div>
+
+            <div className="space-y-2 mb-6">
+              <Metric
+                label="AMPERE"
+                value={`${ampere?.data?.toFixed(1) || 0} A`}
+                percent={Math.min((ampere?.data || 0) * 10, 100)}
+                color="green"
+              />
+              <Metric
+                label="BATTERY"
+                value={`${battery?.data?.toFixed(1) || 0} V`}
+                percent={Math.min((battery?.data || 0) * 10, 100)}
+                color="yellow"
+              />
+            </div>
+
+            {/* ================= HEADING ================= */}
+            <div className="text-xs uppercase tracking-widest text-blue-500 font-bold mb-2 text-center">
+              Compass
+            </div>
+
+            <div className="flex justify-center">
               <Compass degrees={compass?.data} />
             </div>
           </>
