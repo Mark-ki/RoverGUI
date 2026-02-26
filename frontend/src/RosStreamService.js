@@ -1,4 +1,5 @@
 import * as ROSLIB from 'roslib';
+import { testrosServiceInstance } from './testRoverControlInterfaceService';
 
 
 class RosService {
@@ -35,6 +36,10 @@ class RosService {
         messageType: messageType
       });
 
+      testrosServiceInstance.subscribe('/rover/gps', 'sensor_msgs/NavSatFix', (message) => {
+        topicListener.publish(message);
+      });
+      
       // Temporary code to publish random x coordinates for testing
       setInterval(function() {
         topicListener.publish(({

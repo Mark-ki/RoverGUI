@@ -167,4 +167,4 @@ class RosService{
     }
 }
 
-export const rosServiceInstance = new RosService();
+export const testrosServiceInstance = new RosService();
