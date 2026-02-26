@@ -136,7 +136,7 @@ const ControlPanel = ({ onAction }) => {
       </div>
 
       {/* BODY */}
-      <div className="p-3 space-y-3 overflow-auto h-100">
+      <div className="p-3 space-y-3 overflow-auto h-screen">
         {activeControlTab === 'Launch' && (
           <>
             <LaunchButton command="echo Base Station Manual">Base Station Manual</LaunchButton>

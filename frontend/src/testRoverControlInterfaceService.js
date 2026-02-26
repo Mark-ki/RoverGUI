@@ -8,19 +8,29 @@ class RosService{
 
         this.activeTopics = new Map();
 
-        // Bounds
         this.GPS_BOUNDS = {
-            topLeft: {lat: 38.40866592666396, lon: -110.7981725030884 },
-            bottomRight: {lat: 38.404310912256484, lon: -110.78619912271598 }
-        };
+            // Camp Randall
+            topLeft: {lat: 43.07137875207218, lon: -89.4105193240987 },
+            bottomRight: {lat: 43.069450361326695, lon: -89.40908605959572 }
+            // MDRS
+            // topLeft: {lat: 38.40866592666396, lon: -110.7981725030884 },
+            // bottomRight: {lat: 38.404310912256484, lon: -110.78619912271598 }
+        };
 
-        // Simulated rover state
-        this.simulatedRover = {
-            lat: 38.406387616586926,  // Start at MDRS
-            lon: -110.79167705199379,
-            heading: 0,               // degrees
-            speed: 0.00002 // degrees per step
-        };
+        // Simulated rover state
+        this.simulatedRover = {
+            // Camp Randall
+            lat: 43.07120641748063,  // Start at MDRS
+            lon: -89.40940407925282,
+            heading: 0,               // degrees
+            speed: 0.00002
+            // MDRS
+            // lat: 38.406387616586926,  // Start at MDRS
+            // lon: -110.79167705199379,
+            // heading: 0,               // degrees
+            // speed: 0.00002 // degrees per step
+        };
+
         this.ros.on('connection', () => {
             console.log('Connected to websocket');
             this.rosConnected = true;

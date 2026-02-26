@@ -1,16 +1,21 @@
-import React, {useState, useEffect} from "react";
+import React, {useState, useEffect, useRef} from "react";
 import MapPanel from './MapPanel';
 import {rosServiceInstance} from '../../RosStreamService';
 
 
 const MapWrapper = () => {
-// The coordiantes for the central point (google maps pin on the map)
+  // The coordiantes for the central point (google maps pin on the map)
   const MDRS_COORDINATES = {
-    lat: 38.406387616586926,
-    lon: -110.79167705199379
+    // Camp randall
+    lat: 43.07120641748063,
+    lon: -89.40940407925282
+
+    // Actual MDRS coords
+    // lat: 38.406387616586926,
+    // lon: -110.79167705199379
   }
 
-  const PIXELS_PER_METER = 2.0; // TODO To calibrate
+  const PIXELS_PER_METER = 0.4347041909; // Calibrated
 
   const haversineDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371000;
@@ -26,8 +31,11 @@ const MapWrapper = () => {
 
   const calculateBearing = (lat1, lon1, lat2, lon2) => {
     const dLon = (lon2 - lon1) * Math.PI/180;
+    console.log("dlon", dLon);
     const lat1Rad = lat1 * Math.PI/180; // Start
     const lat2Rad = lat2 * Math.PI/180; // End
+    console.log("lat1rad", lat1Rad);
+    console.log("lat2Rad", lat2Rad);
 
     const y = Math.sin(dLon) * Math.cos(lat2Rad);
     const x = Math.cos(lat1Rad) * Math.sin(lat2Rad) - 
@@ -51,6 +59,7 @@ const MapWrapper = () => {
       latitude,
       longitude
     );
+    console.log("Bearing in GPS to MAP function", bearing);
 
     // Convert to x, y offset from MDRS pin (177, 170)
     const bearingRad = bearing * Math.PI / 180;
@@ -68,9 +77,9 @@ const MapWrapper = () => {
       y: Math.round(Math.max(0, Math.min(300, y)))
     }
   }
-  const [roverPos, setRoverPos] = useState({x:300, y:120}); // Input from ros
+  const [roverPos, setRoverPos] = useState({x:300, y:120}); // Input from ros - value here is default
   const [roverHeading, setRoverHeading] = useState(0); // Calculated here
-  const [prevRoverGps, setPrevRoverGps] = useState(null); // Calculated here
+  const prevRoverGps = useRef(null); // Calculated here
 
   const [dronePos, setDronePos] = useState({x:350, y:140}); // Input from ros
 
@@ -93,6 +102,7 @@ const MapWrapper = () => {
   useEffect(() => {
     // Call this function when we are passing in GPS coordinates - send in the message of the GPS, programmed using NavSatFix message documentation: https://docs.ros.org/en/noetic/api/sensor_msgs/html/msg/NavSatFix.html 
     const handleRoverGpsUpdate = (message) => {
+      try{
       console.log('Rover position update:', message);
       if (message.status.status < 0){
         console.warn('No GPS fix available');
@@ -100,27 +110,37 @@ const MapWrapper = () => {
       }
       const newPos = convertGpsToMap(message.latitude, message.longitude);
 
-      if (prevRoverGps) {
+      if (prevRoverGps.current) {
         const heading = calculateBearing(
-          prevRoverGps.lat,
-          prevRoverGps.lon,
+          prevRoverGps.current.lat,
+          prevRoverGps.current.lon,
           message.latitude,
           message.longitude
         );
-
+      console.log('Calculated rover heading', heading);
       setRoverHeading(heading);
+      console.log('Rover Heading as passed to Map Panel', roverHeading);
       }
       console.log(`GPS: ${message.latitude}, ${message.longitude} -> Map: ${newPos.x}, ${newPos.y}`); // DEBUG
+      // console.log("Calling setRoverPos");
       setRoverPos(newPos);
-      setPrevRoverGps({lat: message.latitude, lon: message.longitude}) // Set at end so next call will reuse this value, when roverPos updates
-
+      // console.log("New rover position: ", newPos);
+      // console.log("Calling setPrevRoverGPS");
+      prevRoverGps.current = {lat: message.latitude, lon: message.longitude}; // Set at end so next call will reuse this value, when roverPos updates
+      // console.log("Prev Rover GPS:", prevRoverGps);
+      // console.log("Calling checkwaypoint reached");
       checkWaypointReached(newPos);
+      // console.log("Everything was succeys.");
+    } catch (error) {
+      console.error("Error in handleRoverGpsUpdate: ", error);
     }
-    rosServiceInstance.subscribe('/rover/gps', 'sensor_msgs/NavSatFix', handleRoverGpsUpdate);
+    }
+    rosServiceInstance.subscribe('/fix', 'sensor_msgs/NavSatFix', handleRoverGpsUpdate);
     return () => {
-      rosServiceInstance.unsubscribe('/rover/gps', handleRoverGpsUpdate);
+      rosServiceInstance.unsubscribe('/fix', handleRoverGpsUpdate);
     };
   }, []);
+
 
 
   const checkWaypointReached = (currentPos) => {

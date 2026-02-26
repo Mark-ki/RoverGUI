@@ -36,9 +36,9 @@ class RosService {
         messageType: messageType
       });
 
-      testrosServiceInstance.subscribe('/rover/gps', 'sensor_msgs/NavSatFix', (message) => {
-        topicListener.publish(message);
-      });
+      // testrosServiceInstance.subscribe('/rover/gps', 'sensor_msgs/NavSatFix', (message) => {
+      //   topicListener.publish(message);
+      // });
       
       // Temporary code to publish random x coordinates for testing
       setInterval(function() {
@@ -50,6 +50,7 @@ class RosService {
       // 2. Define what happens when data comes in
       topicListener.subscribe((message) => {
         const entry = this.activeTopics.get(topicName);
+        console.log(`Received message on ${topicName}:`, message);
         if (entry) {
           entry.callbacks.forEach(cb => cb(message));
         }

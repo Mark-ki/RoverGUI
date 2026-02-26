@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useMemo} from "react";
-import mapImg from '../../assets/map.png';
+import mapImg from '../../assets/map_randall.png';
 
 const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeading}) => {
   const [autoZoom, setAutoZoom] = useState(true);
@@ -14,7 +14,7 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
       Math.pow(nextWaypoint.y - roverPos.y, 2)
     );
 
-    const scale = Math.max(0.5, Math.min(2.5, 1 + (50 / Math.max(distance, 5))))
+    const scale = Math.max(0.5, Math.min(4.0, 1 + (100 / Math.max(distance, 5))))
     return scale;
   }, [roverPos, coordinates, autoZoom]);
 
@@ -35,11 +35,6 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
       transform += ` scale(${zoomScale})`;
       // Translate to center on rover
       transform += ` translate(${-roverPos.x}, ${-roverPos.y})`;
-    }
-    
-    // Handle rotation
-    if (autoRotate) {
-      transform += ` rotate(${(-roverHeading)})`;
     }
 
     return transform;
@@ -97,7 +92,7 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
             href={mapImg}
             width="400" 
             height="300" 
-            preserveAspectRatio="xMidYMid slice"
+            preserveAspectRatio="none"
             className="opacity-90" // Dimmed slightly more for better UI contrast
             style={{ filter: 'brightness(0.8) contrast(1.2)' }}
           />
@@ -111,10 +106,24 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
           ))}
 
           {/* Rover position */}
-          <circle cx={roverPos.x} cy={roverPos.y} r="4" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
-          {/*Don't need indicator for heading yet next feature - both rover and text rotation*/}
-          <text x={roverPos.x + 10} y={roverPos.y + 5} fill="#000000" fontSize="8">
-            ROVER 
+          {autoRotate ? (
+            // Rotated rover with direction arrow
+            <g transform={`translate(${roverPos.x}, ${roverPos.y}) rotate(${roverHeading})`}>
+              <polygon
+                points="0,-6 -3,4 0,2 3,4" 
+                fill="#ef4444" 
+                stroke="#ffffff" 
+                strokeWidth="1"
+              />
+            </g>
+          ) : (
+            // Static rover circle
+            <circle cx={roverPos.x} cy={roverPos.y} r="4" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
+          )}
+
+          {/* Rover text label */}
+          <text x={roverPos.x + 10} y={roverPos.y + 5} fill="#ffffff" fontSize="8">
+            ROVER {autoRotate ? `${Math.round(roverHeading)}°` : ''}
           </text>
 
           <circle cx={dronePos.x} cy={dronePos.y} r="4" fill="#38bdf8" stroke="#ffffff" strokeWIdth="1" />
