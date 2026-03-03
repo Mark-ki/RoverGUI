@@ -154,8 +154,8 @@ class ZMQBridge {
 
 // Usage
 const zmqSources = [
-    { zmqIp: '192.168.1.169', zmqBasePort: 4444, streamCount: 2, flip: [ false, false, false ] },
-    { zmqIp: '192.168.1.192', zmqBasePort: 5555, streamCount: 0, flip: [ false ]},
+    //{ zmqIp: '192.168.1.169', zmqBasePort: 4444, streamCount: 1 , flip: [ false] },
+    { zmqIp: '192.168.1.192', zmqBasePort: 5555, streamCount: 1, flip: [ false ]},
 ]
 const bridge = new ZMQBridge(zmqSources, 8081);
 bridge.start().catch(console.error);
