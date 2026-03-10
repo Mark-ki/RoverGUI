@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import CameraStream from '../CameraOpenCV';
 import TabButton from '../TabButton';
+import RosImagePanel from './RosImagePanel';
 
 function CameraPanelCV() {
   const [streams, setStreams] = useState({}); // Stores active ports
@@ -164,6 +165,10 @@ function CameraPanelCV() {
                   className="aspect-video"
                 />
               ))}
+
+              <RosImagePanel topicName={"/bottle"}></RosImagePanel>
+              <RosImagePanel topicName={"/panorama"}></RosImagePanel>
+
             </div>
           )}
         </div>

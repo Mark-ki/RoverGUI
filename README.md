@@ -8,7 +8,7 @@ The current version is ./frontend (React) and ./backend (Node)
 
 ## Current todo list
 
-1. Finalize ros topic names, change to global ros connection
+1. Finalize ros topic names
 2. Emergency stop button and launch script name
 3. Make the GUI work for clients other than the host
 

@@ -52,38 +52,16 @@ const RosImagePanel = ({ topicName }) => {
 
 
   return (
-    <div className="image-panel" style={styles.container}>
-      <h3 style={styles.title}>{topicName}</h3>
-      <div style={styles.canvasWrapper}>
-        <canvas ref={canvasRef} style={styles.canvas} />
+    <div className="bg-black border border-slate-600 relative overflow-hidden aspect-video">
+      {/* <h3>{topicName}</h3> */}
+        <canvas ref={canvasRef} />
+      <div className="absolute top-1 right-1 text-[10px] font-bold text-green-400 bg-black/40 px-1 rounded">
+        ● {topicName}
       </div>
-      {!imageData && <div style={styles.placeholder}>Waiting for stream...</div>}
+      {/* {!imageData && <div className='pt-1 text-center'>No input</div>} */}
     </div>
   );
 };
 
-const styles = {
-  container: {
-    backgroundColor: '#1e1e1e',
-    padding: '10px',
-    borderRadius: '8px',
-    color: 'white',
-    width: 'fit-content'
-  },
-  canvasWrapper: {
-    border: '2px solid #333',
-    lineHeight: 0
-  },
-  canvas: {
-    maxWidth: '100%',
-    height: 'auto',
-    display: 'block'
-  },
-  placeholder: {
-    padding: '20px',
-    textAlign: 'center',
-    color: '#666'
-  }
-};
 
 export default RosImagePanel;

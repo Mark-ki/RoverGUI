@@ -3,6 +3,15 @@ import { Ros, Topic } from 'roslib';
 import TabButton from '../TabButton';
 import { useRosTopic } from '../../useRosTopic';
 import { connectionStatus } from '../../useRosTopic';
+import { 
+  ResponsiveContainer, 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip 
+} from 'recharts';
 
 /* ===================== UI COMPONENTS ===================== */
 const Metric = ({ label, value, percent, color }) => (
@@ -65,6 +74,52 @@ const Compass = ({ degrees }) => (
     </div>
   </div>
 );
+
+/* ===================== Graph ===================== */
+
+const ContinuousPlot = ({ dataValue, label, color = "#4ade80", limit = 20 }) => {
+  const [history, setHistory] = useState([1, 10, 4, 5,2,5 ,5,3,7,4,5].map((v, i) => ({ time: i, value: v })));
+
+  useEffect(() => {
+    if (dataValue !== undefined && dataValue !== null) {
+      setHistory(prev => {
+        const newData = [...prev, { time: Date.now(), value: dataValue }];
+        return newData.slice(-limit);
+      });
+    }
+  }, [dataValue, limit]);
+
+  return (
+    <div className="h-40 w-full bg-slate-800/50 rounded-lg p-2 border border-slate-700">
+      <div className="text-[10px] text-slate-400 uppercase mb-1">{label}</div>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={history}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+          <XAxis hide dataKey="time" />
+          <YAxis 
+            domain={['auto', 'auto']} 
+            fontSize={10} 
+            tick={{fill: '#94a3b8'}} 
+            axisLine={false}
+            tickLine={false}
+          />
+          <Tooltip 
+            contentStyle={{ backgroundColor: '#1e293b', border: 'none', fontSize: '10px' }}
+            labelStyle={{ display: 'none' }}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="value" 
+            stroke={color} 
+            strokeWidth={2} 
+            dot={true} 
+            isAnimationActive={false} // Disable animation for real-time smoothness
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+};
 
 /* ===================== MAIN COMPONENT ===================== */
 const ControlPanel = ({ onAction }) => {
@@ -136,7 +191,7 @@ const ControlPanel = ({ onAction }) => {
       </div>
 
       {/* BODY */}
-      <div className="p-3 space-y-3 overflow-auto h-screen">
+      <div className="p-3 space-y-3 overflow-auto h-full custom-terminal-scrollbar">
         {activeControlTab === 'Launch' && (
           <>
             <LaunchButton command="echo Base Station Manual">Base Station Manual</LaunchButton>
@@ -207,12 +262,13 @@ const ControlPanel = ({ onAction }) => {
             </div>
 
             {/* ================= HEADING ================= */}
-            <div className="text-xs uppercase tracking-widest text-blue-500 font-bold mb-2 text-center">
-              Compass
+            <div className="text-xs uppercase tracking-widest text-blue-500 font-bold mb-2 text-center b-bottom-10">
+              Others
             </div>
 
-            <div className="flex justify-center">
+            <div className="flex flex-row gap-4">
               <Compass degrees={compass?.data} />
+              <ContinuousPlot dataValue={compass?.data} label="Compass Heading (°)" color="#4ade80" />
             </div>
           </>
         )}

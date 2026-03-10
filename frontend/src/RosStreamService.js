@@ -50,7 +50,7 @@ class RosService {
       // 2. Define what happens when data comes in
       topicListener.subscribe((message) => {
         const entry = this.activeTopics.get(topicName);
-        console.log(`Received message on ${topicName}:`, message);
+        // console.log(`Received message on ${topicName}:`, message);
         if (entry) {
           entry.callbacks.forEach(cb => cb(message));
         }

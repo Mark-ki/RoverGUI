@@ -6,7 +6,6 @@ import Header from './Header';
 import ControlPanel from './panels/ControlPanel';
 import CameraPanel from './panels/CameraPanelCV';
 import TerminalTabs from './TerminalTabs';
-import RosImagePanel from './panels/TempDepthPanel';
 import MapWrapper from './panels/MapWrapper';
 
 
