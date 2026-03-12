@@ -77,43 +77,83 @@ const Compass = ({ degrees }) => (
 
 /* ===================== Graph ===================== */
 
-const ContinuousPlot = ({ dataValue, label, color = "#4ade80", limit = 20 }) => {
-  const [history, setHistory] = useState([1, 10, 4, 5,2,5 ,5,3,7,4,5].map((v, i) => ({ time: i, value: v })));
+/* ===================== MULTI-LINE PLOT ===================== */
+const DualContinuousPlot = ({ 
+  dataValue1, 
+  label1, 
+  color1 = "#3b82f6", 
+  dataValue2, 
+  label2, 
+  color2 = "#f59e0b", 
+  limit = 40 
+}) => {
+  const [history, setHistory] = useState([]);
 
   useEffect(() => {
-    if (dataValue !== undefined && dataValue !== null) {
-      setHistory(prev => {
-        const newData = [...prev, { time: Date.now(), value: dataValue }];
-        return newData.slice(-limit);
-      });
-    }
-  }, [dataValue, limit]);
+    // We update the history whenever either value changes
+    setHistory(prev => {
+      const newData = [
+        ...prev, 
+        { 
+          // Using short keys to keep the data objects light
+          v1: dataValue1 ?? (prev.length > 0 ? prev[prev.length - 1].v1 : 0), 
+          v2: dataValue2 ?? (prev.length > 0 ? prev[prev.length - 1].v2 : 0) 
+        }
+      ];
+      return newData.slice(-limit);
+    });
+  }, [dataValue1, dataValue2, limit]);
 
   return (
-    <div className="h-40 w-full bg-slate-800/50 rounded-lg p-2 border border-slate-700">
-      <div className="text-[10px] text-slate-400 uppercase mb-1">{label}</div>
-      <ResponsiveContainer width="100%" height="100%">
+    <div className="h-48 w-full bg-slate-800/40 rounded-lg p-3 border border-slate-700 shadow-inner">
+      <div className="flex justify-between items-center mb-2 px-1">
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color1 }} />
+            <span className="text-[10px] text-slate-300 font-bold uppercase">{label1}</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2 h-2 rounded-full" style={{ backgroundColor: color2 }} />
+            <span className="text-[10px] text-slate-300 font-bold uppercase">{label2}</span>
+          </div>
+        </div>
+        <span className="text-[9px] text-slate-500 font-mono italic">REAL-TIME</span>
+      </div>
+
+      <ResponsiveContainer width="100%" height="85%">
         <LineChart data={history}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
-          <XAxis hide dataKey="time" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} opacity={0.5} />
+          <XAxis hide />
           <YAxis 
             domain={['auto', 'auto']} 
             fontSize={10} 
-            tick={{fill: '#94a3b8'}} 
+            tick={{fill: '#64748b'}} 
             axisLine={false}
             tickLine={false}
           />
           <Tooltip 
-            contentStyle={{ backgroundColor: '#1e293b', border: 'none', fontSize: '10px' }}
-            labelStyle={{ display: 'none' }}
+            contentStyle={{ backgroundColor: '#0f172a', border: '1px solid #334155', fontSize: '11px', borderRadius: '4px' }}
+            itemStyle={{ padding: '0px' }}
+            cursor={{ stroke: '#475569', strokeWidth: 1 }}
+            isAnimationActive={false}
           />
           <Line 
             type="monotone" 
-            dataKey="value" 
-            stroke={color} 
+            dataKey="v1" 
+            name={label1}
+            stroke={color1} 
             strokeWidth={2} 
-            dot={true} 
-            isAnimationActive={false} // Disable animation for real-time smoothness
+            dot={false} 
+            isAnimationActive={false}
+          />
+          <Line 
+            type="monotone" 
+            dataKey="v2" 
+            name={label2}
+            stroke={color2} 
+            strokeWidth={2} 
+            dot={false} 
+            isAnimationActive={false}
           />
         </LineChart>
       </ResponsiveContainer>
@@ -268,7 +308,7 @@ const ControlPanel = ({ onAction }) => {
 
             <div className="flex flex-row gap-4">
               <Compass degrees={compass?.data} />
-              <ContinuousPlot dataValue={compass?.data} label="Compass Heading (°)" color="#4ade80" />
+              <DualContinuousPlot dataValue1={compass?.data} dataValue2={x?.data} label1="Compass Heading (°)" label2="X Coordinate" />
             </div>
           </>
         )}
