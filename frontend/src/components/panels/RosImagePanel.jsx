@@ -1,67 +1,83 @@
-import React, { useEffect, useRef } from 'react';
-import { useRosTopic } from '../../useRosTopic'; // Path to your hook
+import React, { useEffect, useRef, useState } from 'react';
+import { useRosTopic } from '../../useRosTopic';
 
 const RosImagePanel = ({ topicName }) => {
-  // Change 1ms to 33ms (30fps) to prevent React from choking
-  const imageData = useRosTopic(topicName, 'sensor_msgs/msg/Image', 1000); 
+  const imageData = useRosTopic(topicName, 'sensor_msgs/msg/CompressedImage', 33); 
   const canvasRef = useRef(null);
+  const containerRef = useRef(null);
+  
+  // 1. Add state to track if this panel is maximized
+  const [isExpanded, setIsExpanded] = useState(false);
 
   useEffect(() => {
-  if (!imageData || !canvasRef.current) return;
+    if (!imageData || !imageData.data || !canvasRef.current || !containerRef.current) return;
 
-  const canvas = canvasRef.current;
-  const ctx = canvas.getContext('2d');
-
-  // 1. Determine if it's Raw or Compressed
-  // Raw messages have an 'encoding' field like 'rgb8' or 'bgr8'
-  const isRaw = imageData.encoding !== undefined;
-
-  if (isRaw) {
-    canvas.width = imageData.width;
-    canvas.height = imageData.height;
-
-    const imgData = ctx.createImageData(imageData.width, imageData.height);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const container = containerRef.current;
     
-    // Decode Base64 string to a byte array (Rosbridge sends raw data as Base64)
-    const binaryString = window.atob(imageData.data);
-    
-    for (let i = 0; i < (imageData.width * imageData.height); i++) {
-      const srcIdx = i * 3;
-      const destIdx = i * 4;
-
-      // Map RGB to RGBA
-      imgData.data[destIdx]     = binaryString.charCodeAt(srcIdx);     // R
-      imgData.data[destIdx + 1] = binaryString.charCodeAt(srcIdx + 1); // G
-      imgData.data[destIdx + 2] = binaryString.charCodeAt(srcIdx + 2); // B
-      imgData.data[destIdx + 3] = 255;                                 // A (Alpha)
-    }
-
-    ctx.putImageData(imgData, 0, 0);
-
-  } else {
-    // FALLBACK: Compressed Image (JPEG/PNG)
     const img = new Image();
+    
     img.onload = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
-      ctx.drawImage(img, 0, 0);
-    };
-    img.src = `data:image/jpeg;base64,${imageData.data}`;
-  }
-}, [imageData]);
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
 
+      const hRatio = canvas.width / img.width;
+      const vRatio = canvas.height / img.height;
+      const ratio = Math.min(hRatio, vRatio); 
+      
+      const centerShift_x = (canvas.width - img.width * ratio) / 2;
+      const centerShift_y = (canvas.height - img.height * ratio) / 2;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(
+        img, 
+        0, 0, img.width, img.height,               
+        centerShift_x, centerShift_y, img.width * ratio, img.height * ratio 
+      );
+    };
+
+    const format = imageData.format.toLowerCase().includes('png') ? 'png' : 'jpeg';
+    img.src = `data:image/${format};base64,${imageData.data}`;
+    
+    // 2. Add `isExpanded` to the dependency array so the canvas recalculates 
+    // its size and redraws the moment the panel enlarges.
+  }, [imageData, isExpanded]);
 
   return (
-    <div className="bg-black border border-slate-600 relative overflow-hidden aspect-video">
-      {/* <h3>{topicName}</h3> */}
-        <canvas ref={canvasRef} />
+    <div 
+      ref={containerRef} 
+      onClick={() => setIsExpanded(!isExpanded)}
+      // 3. Toggle between absolute overlay (expanded) and normal relative flow
+      className={`
+        bg-black border border-slate-600 overflow-hidden cursor-pointer
+        ${isExpanded ? 'absolute inset-0 z-50' : 'relative w-full h-full'}
+      `}
+    >
+      <canvas 
+        ref={canvasRef} 
+        className="block w-full h-full" 
+      />
+
+
       <div className="absolute top-1 right-1 text-[10px] font-bold text-green-400 bg-black/40 px-1 rounded">
         ● {topicName}
       </div>
-      {/* {!imageData && <div className='pt-1 text-center'>No input</div>} */}
+
+      {/* Optional visual hint for the user */}
+      <div className="absolute bottom-1 right-1 text-[10px] text-slate-400 bg-black/40 px-1 rounded pointer-events-none">
+        {isExpanded ? 'Click to minimize' : 'Click to expand'}
+      </div>
+{/* 
+      {!imageData && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <span className="text-slate-600 text-[10px] font-mono animate-pulse">NO SIGNAL</span>
+        </div>
+      )} */}
     </div>
   );
 };
 
-
 export default RosImagePanel;
+

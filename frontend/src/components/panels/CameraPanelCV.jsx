@@ -149,7 +149,7 @@ function CameraPanelCV() {
             </div>
           ) : (
             /* Fullscreen Grid Layout */
-            <div className="grid grid-cols-3 gap-1 w-full">
+            <div className="grid grid-cols-3 gap-1 w-full relative">
               {/* <div className="flex flex-col gap-1 col-span-1">
                 <RenderStream port={portList[0]} label="CAM1" className="flex-1" />
                 <RenderStream port={portList[1]} label="CAM2" className="flex-1" />
