@@ -42,7 +42,7 @@ const TerminalTabs = ({ onTerminalInit }) => {
             key={tab}
             className="absolute inset-0"
             style={{
-              display: activeTab === tab ? "block" : "none",
+              visibility: activeTab === tab ? "visible" : "hidden",
             }}
           >
             {/* PRO TIP: If the terminal looks "squished" when switching back, 
