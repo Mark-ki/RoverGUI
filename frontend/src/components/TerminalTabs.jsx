@@ -48,7 +48,7 @@ const TerminalTabs = ({ onTerminalInit }) => {
             {/* PRO TIP: If the terminal looks "squished" when switching back, 
                ensure ConsolePanel's handleResize is triggered when activeTab changes.
             */}
-            <ConsolePanel onInit={(inst) => onTerminalInit(tab, inst)} />
+            <ConsolePanel ip={tab=="Terminal 1"? "http://localhost:3001" : "http://localhost:3001"} onInit={(inst) => onTerminalInit(tab, inst)} />
           </div>
         ))}
       </div>

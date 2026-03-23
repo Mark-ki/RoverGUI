@@ -23,7 +23,7 @@ const ConsolePanel = (props) => {
     }
 
     // Connect to your Node backend
-    const socket = io("http://localhost:3001"); // ✅ Node backend port
+    const socket = io(props.ip); // ✅ Node backend port
     socketRef.current = socket;
 
     socket.on("connect", () => {
