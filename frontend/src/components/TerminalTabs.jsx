@@ -44,11 +44,10 @@ const TerminalTabs = ({ onTerminalInit }) => {
             style={{
               visibility: activeTab === tab ? "visible" : "hidden",
             }}
+            //http://192.168.1.134 The address of the JETSON
           >
-            {/* PRO TIP: If the terminal looks "squished" when switching back, 
-               ensure ConsolePanel's handleResize is triggered when activeTab changes.
-            */}
-            <ConsolePanel ip={tab=="Terminal 1"? "http://localhost:3001" : "http://localhost:3001"} onInit={(inst) => onTerminalInit(tab, inst)} />
+
+            <ConsolePanel ip={tab=="Terminal 1"? "http://localhost:3001" : "http://192.168.1.134:3001"} onInit={(inst) => onTerminalInit(tab, inst)} />
           </div>
         ))}
       </div>

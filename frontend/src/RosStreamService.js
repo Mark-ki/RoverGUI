@@ -41,16 +41,16 @@ class RosService {
       // });
       
       // Temporary code to publish random x coordinates for testing
-      setInterval(function() {
-        topicListener.publish(({
-            data: Math.round(Math.random()*100, 2)
-        }));
-      }, 2000);
+      // setInterval(function() {
+      //   topicListener.publish(({
+      //       data: Math.round(Math.random()*100, 2)
+      //   }));
+      // }, 2000);
 
       // 2. Define what happens when data comes in
       topicListener.subscribe((message) => {
         const entry = this.activeTopics.get(topicName);
-        // console.log(`Received message on ${topicName}:`, message);
+        console.log(`Received message on ${topicName}:`, message);
         if (entry) {
           entry.callbacks.forEach(cb => cb(message));
         }

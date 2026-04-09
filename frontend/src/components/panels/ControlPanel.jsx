@@ -235,7 +235,7 @@ const ControlPanel = ({ onAction }) => {
         {activeControlTab === 'Launch' && (
           <>
             <LaunchButton command="echo Base Station Manual">Base Station Manual</LaunchButton>
-            <LaunchButton command="ls" terminal={2}>Rover Manual</LaunchButton>
+            <LaunchButton command="echo 'i#3Er0b0' | sudo -S -v; cd /home/wiscrobo/workspace/WRoverSoftware;bash roverStart.sh" terminal={2}>Rover Manual</LaunchButton>
             <LaunchButton command="Autonomous Mode">Autonomous Mode</LaunchButton>
             <LaunchButton command="Science Base">Science Base</LaunchButton>
             <LaunchButton command="Science Rover" terminal={2}>Science Rover</LaunchButton>
