@@ -132,7 +132,7 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
           </text>
 
           {/* Create waypoints from coordinate array*/}
-          {coordinates.map((coord, idx) => (
+          {/* {coordinates.map((coord, idx) => (
             <React.Fragment key={idx}>
               <circle 
               cx={coord.x} cy={coord.y} 
@@ -147,16 +147,16 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
                 {visitedWaypoints.has(coord.id) ? "✓" : `WP${idx+1}`}
               </text>
             </React.Fragment>
-          ))}
+          ))} */}
 
           {/* Path trace */}
-          <polyline
+          {/* <polyline
             points={pathPoints}
             fill="none"
             stroke="#10b981"
             strokeWidth="2"
             strokeDasharray="3,2"
-          />
+          /> */}
         </g>
 
         {/*TODO: Arrowhead for indicator */}

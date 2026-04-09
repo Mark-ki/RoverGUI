@@ -15,7 +15,7 @@ const MapWrapper = () => {
     // lon: -110.79167705199379
   }
 
-  const PIXELS_PER_METER = 0.4347041909; // Calibrated
+  const PIXELS_PER_METER = 2.4347041909; // Calibrated
 
   const haversineDistance = (lat1, lon1, lat2, lon2) => {
     const R = 6371000;
@@ -66,8 +66,8 @@ const MapWrapper = () => {
     const pixelDistance = distance * PIXELS_PER_METER;
 
     // location of MDRS on current screenshot - change if you change image
-    const MDRS_MAP_LOCATION_PX_X = 177
-    const MDRS_MAP_LOCATION_PX_Y = 150
+    const MDRS_MAP_LOCATION_PX_X = 245
+    const MDRS_MAP_LOCATION_PX_Y = 43
 
     const x = MDRS_MAP_LOCATION_PX_X + (pixelDistance * Math.sin(bearingRad));
     const y = MDRS_MAP_LOCATION_PX_Y - (pixelDistance * Math.cos(bearingRad));
