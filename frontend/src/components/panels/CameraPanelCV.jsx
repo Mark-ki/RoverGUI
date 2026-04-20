@@ -166,7 +166,7 @@ function CameraPanelCV() {
                 />
               ))}
 
-              <RosImagePanel topicName={"/bottle"}></RosImagePanel>
+              <RosImagePanel topicName={"/detection_image"}></RosImagePanel>
               <RosImagePanel topicName={"/panorama"}></RosImagePanel>
 
             </div>
