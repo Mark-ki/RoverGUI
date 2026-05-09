@@ -4,7 +4,7 @@ import * as ROSLIB from 'roslib';
 class RosService{
     constructor() {
         this.rosConnected = false;
-        this.ros = new ROSLIB.Ros({ url: 'ws://localhost:8080'});
+        this.ros = new ROSLIB.Ros({ url: 'ws://localhost:9090'});
 
         this.activeTopics = new Map();
 
