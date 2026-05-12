@@ -32,8 +32,12 @@ function CameraPanelCV() {
 
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:8081');
+    const ws = new WebSocket('ws://localhost:3001/frames');
     wsRef.current = ws;
+    
+    ws.onopen = () => {
+      console.log('✓ WebSocket connected to /frames');
+    };
 
     ws.onmessage = (event) => {
       try {
@@ -52,6 +56,14 @@ function CameraPanelCV() {
       } catch (err) {
         console.error('Error processing frame:', err);
       }
+    };
+    
+    ws.onerror = (event) => {
+      console.error('✗ WebSocket error:', event);
+    };
+    
+    ws.onclose = () => {
+      console.log('WebSocket disconnected');
     };
 
     return () => ws.close();
