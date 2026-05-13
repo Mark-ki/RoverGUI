@@ -4,7 +4,7 @@ import SimpleCoordinateTransform from '../utils/SimpleCoordinateTransform';
 // and change this URL to just `/chunks/`
 const CHUNKS_BASE_URL = '/chunks/'; 
 
-const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady }) => {
+const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady, panOffset = {x: 0, y: 0} }) => {
   const [metadata, setMetadata] = useState(null);
   const [loadedChunks, setLoadedChunks] = useState(new Map());
   const [error, setError] = useState(false);
@@ -26,14 +26,15 @@ const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady }
       });
   }, []);
 
-  // Calculate visible chunks based on rover position and zoom
+  // Calculate visible chunks based on rover position, zoom and panning
   const visibleChunks = useMemo(() => {
     if (!metadata || !centerGPS) return [];
 
     const chunks = [];
     const MAP_ZOOM_LEVEL = 20; // Zoom level used for download
     const roverPx = SimpleCoordinateTransform.gpsToMercator(centerGPS.lat, centerGPS.lng, MAP_ZOOM_LEVEL);
-    const pixelThresh = (400/zoomScale) + 256;    
+    
+    const pixelThresh = (400/zoomScale) + 256 + (Math.max(Math.abs(panOffset.x), Math.abs(panOffset.y)) / zoomScale);    
 
     Object.values(metadata.chunks || {}).forEach(chunk => {
       // Use fallback if centerGPS isn't explicitly defined in metadata
@@ -44,7 +45,8 @@ const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady }
       const dyPixels = chunkPx.y - roverPx.y;
 
       // Check if chunk overlaps viewport
-      if (Math.abs(dxPixels) <= pixelThresh && Math.abs(dyPixels) <= pixelThresh) {
+      if (Math.abs(dxPixels + (panOffset.x / zoomScale)) <= pixelThresh && 
+          Math.abs(dyPixels + (panOffset.y / zoomScale)) <= pixelThresh) {
         chunks.push({
             ...chunk,
             dxPixels: dxPixels,
@@ -54,7 +56,7 @@ const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady }
     });
 
     return chunks;
-  }, [metadata, centerGPS, zoomScale]);
+  }, [metadata, centerGPS, zoomScale, panOffset]);
 
   // Load chunk images safely avoiding loops and duplicate fetches
   useEffect(() => {
@@ -114,14 +116,14 @@ const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady }
         const renderHeight = TILE_SIZE * zoomScale;
 
         // Transform dx/dy into screen pixels offset from the center 
-        // dx is East (+X), dy is North (-Y in CSS)
+        // dx is East (+X), dy is North (Y in CSS)
         const xOffsetPixels = chunk.dxPixels * zoomScale;
-        const yOffsetPixels = chunk.dyPixels * zoomScale;
+        const yOffsetPixels = chunk.dyPixels * zoomScale; // Check this if inverse rendering issue occurs
 
-        // Center of the wrapper is (200, 150)
+        // Center of the wrapper is (200, 200)
         // Position chunk so its mathematical center aligns perfectly on the view
-        const left = 600 + xOffsetPixels - (renderWidth / 2);
-        const top = 600 + yOffsetPixels - (renderHeight / 2);
+        const left = 600 + xOffsetPixels - (renderWidth / 2) + panOffset.x;
+        const top = 600 + yOffsetPixels - (renderHeight / 2) + panOffset.y;
 
         return (
           <img
