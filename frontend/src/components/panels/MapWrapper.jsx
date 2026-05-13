@@ -1,6 +1,6 @@
 import React, {useState, useEffect, useRef} from "react";
 import MapPanel from './MapPanel';
-import {testrosServiceInstance} from '../../testRoverControlInterfaceService';
+import {rosServiceInstance} from '../../RosStreamService'; //TODO
 
 const MapWrapper = () => {
   // Initialize coordinate transform utility (eliminates duplicate GPS functions)
@@ -35,7 +35,7 @@ const MapWrapper = () => {
     const handleRoverGpsUpdate = (message) => {
       try{
       console.log('Rover position update:', message);
-      if (message.status.status < 0){
+      if (message.gnss_fix_ok === true){
         console.warn('No GPS fix available');
         return;
       }
@@ -44,8 +44,8 @@ const MapWrapper = () => {
         const heading = calculateBearing(
           prevRoverGps.current.lat,
           prevRoverGps.current.lng,
-          message.latitude,
-          message.longitude
+          message.lat,
+          message.lon
         );
       console.log('Calculated rover heading', heading);
       setRoverHeading(heading);
@@ -53,17 +53,17 @@ const MapWrapper = () => {
       }
 
       // Set GPS coordinates for tile system
-      setCurrentRoverGPS({ lat: message.latitude, lng: message.longitude });
+      setCurrentRoverGPS({ lat: message.lat, lng: message.lon });
       // console.log("New rover position: ", newPos);
       // console.log("Calling setPrevRoverGPS");
-      prevRoverGps.current = {lat: message.latitude, lng: message.longitude};
+      prevRoverGps.current = {lat: message.lat, lng: message.lon};
     } catch (error) {
       console.error("Error in handleRoverGpsUpdate: ", error);
     }
     }
-    testrosServiceInstance.subscribe('/fix', 'sensor_msgs/NavSatFix', handleRoverGpsUpdate); //TODO
+    rosServiceInstance.subscribe('/rover1/ubx_nav_pvt', 'ublox_ubx_msgs/UBXNavPVT', handleRoverGpsUpdate); //TODO
     return () => {
-      testrosServiceInstance.unsubscribe('/fix', handleRoverGpsUpdate); //TODO
+      rosServiceInstance.unsubscribe('/rover1/ubx_nav_pvt', handleRoverGpsUpdate); //TODO
     };
   }, []);
 
