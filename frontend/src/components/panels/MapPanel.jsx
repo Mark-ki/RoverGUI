@@ -1,27 +1,35 @@
-import React, {useState, useEffect, useMemo} from "react";
+import React, {useState, useMemo} from "react";
 import mapImg from '../../assets/map_randall.png';
+import ChunkRenderer from '../ChunkRenderer';
 
-const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeading}) => {
+const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = false}) => {
   const [autoZoom, setAutoZoom] = useState(true);
   const [autoRotate, setAutoRotate] = useState(false);
+  const [tileSystemReady, setTileSystemReady] = useState(false);
 
   const zoomScale = useMemo(() => {
-    if (!autoZoom || coordinates.length === 0) return 1;
+    if (!autoZoom) return 1;
+    return 1; // Default scale when autoZoom is enabled
+  }, [autoZoom]);
 
-    const nextWaypoint = coordinates[0]; // Add logic so that traversed waypoints are taken out of the coord list
-    const distance = Math.sqrt(
-      Math.pow(nextWaypoint.x - roverPos.x, 2) +
-      Math.pow(nextWaypoint.y - roverPos.y, 2)
-    );
+  // Calculate zoom level for tile system based on auto-zoom scale
+  const tileZoomLevel = useMemo(() => {
+    // Convert zoomScale to appropriate tile zoom level (16-20)
+    // zoomScale ranges from 0.5 to 4.0, map to zoom levels
+    const minZoom = 16;
+    const maxZoom = 20;
+    const normalizedScale = Math.max(0.5, Math.min(4.0, zoomScale));
 
-    const scale = Math.max(0.5, Math.min(4.0, 1 + (100 / Math.max(distance, 5))))
-    return scale;
-  }, [roverPos, coordinates, autoZoom]);
+    // Linear interpolation: higher zoomScale = higher zoom level
+    const zoom = minZoom + ((normalizedScale - 0.5) / (4.0 - 0.5)) * (maxZoom - minZoom);
+    return Math.round(zoom);
+  }, [zoomScale]);
 
   // Calculate transforms
   const svgTransform = useMemo(() => {
+    if (useTileSystem) return '';
     const centerX = 200;
-    const centerY = 150;
+    const centerY = 200;
 
     let transform = '';
 
@@ -38,13 +46,7 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
     }
 
     return transform;
-  }, [roverPos, zoomScale, autoZoom])
-
-
-  const pathPoints = [
-            `${roverPos.x}, ${roverPos.y}`,
-            ...coordinates.map(coord => `${coord.x}, ${coord.y}`)
-          ].join(' ');
+  }, [roverPos, zoomScale, autoZoom, useTileSystem]);
 
   return (
     <div className="flex flex-col bg-slate-900 border border-slate-700 w-full h-full">
@@ -52,9 +54,21 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
       <div className="bg-slate-800 border-b border-slate-700 p-2 flex justify-between items-center">
         <span className="text-xs">NAVIGATION MAP</span>
         <div className="flex space-x-2 text-xs">
-          <span className="text-green-400">GPS LOCK</span>
-          <span className="text-slate-500">|</span>
-          <span>ZOOM: {zoomScale.toFixed(1)}x</span>
+          {useTileSystem && roverGPS ? (
+            <>
+              <span className={tileSystemReady ? "text-green-400" : "text-yellow-400"}>
+                {tileSystemReady ? "TILES READY" : "LOADING TILES"}
+              </span>
+              <span className="text-slate-500">|</span>
+              <span>ZOOM: L{tileZoomLevel} ({zoomScale.toFixed(1)}x)</span>
+            </>
+          ) : (
+            <>
+              <span className="text-green-400">GPS LOCK</span>
+              <span className="text-slate-500">|</span>
+              <span>ZOOM: {zoomScale.toFixed(1)}x</span>
+            </>
+          )}
         </div>
         {/*Toggle buttons*/}
         <button
@@ -65,7 +79,7 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
         </button> 
         <button
           onClick={()=>setAutoRotate(!autoRotate)}
-          className={`px-2 py-1 text-xs ${autoRotate ? 'text-green-400-bg-green-900' : 'text-slate-400'}`}
+          className={`px-2 py-1 text-xs ${autoRotate ? 'text-green-400 bg-green-900' : 'text-slate-400'}`}
         >
         Toggle Rotation
         </button>
@@ -78,28 +92,49 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
         {/* Simulated map grid */}
         <svg 
         className="absolute inset-4 w-[calc(100%-2rem)] h-[calc(100%-2rem)]" 
-        viewBox="0 0 400 300" 
+        viewBox="0 0 400 400" 
         preserveAspectRatio="xMidYMid meet"
         >
-          {/*MAP with transforms*/}
+          {/* MAP background */}
+          {useTileSystem && roverGPS ? (
+            <foreignObject 
+            x="-400" // Adjust the center by -400 so it matches the 200, 200 svg center
+            y="-400" 
+            width="1200" // Huge bounding box parameters for fitting 512x512 px
+            height="1200"
+            style={{ padding:0, margin: 0, border: 'none'}}
+            className="m-0 p-0 block leading-none"
+            >
+              <ChunkRenderer
+                centerGPS={roverGPS}
+                zoomScale={zoomScale}
+                fallbackImage={mapImg}
+                onTilesReady={setTileSystemReady}
+              />
+            </foreignObject>
+          ) : null } 
+          {/*static MAP with transforms*/}
           <g
             transform = {svgTransform}
             style={{
               transition: 'transform 0.5s ease-out' //Cha cha real smooth
             }}
           >
-          <image 
-            href={mapImg}
-            width="400" 
-            height="300" 
-            preserveAspectRatio="none"
-            className="opacity-90" // Dimmed slightly more for better UI contrast
-            style={{ filter: 'brightness(0.8) contrast(1.2)' }}
-          />
+          {/* MAP BACKGROUND - Dynamic tiles or static fallback */}
+           {!useTileSystem && (
+            <image
+              href={mapImg}
+              width="400"
+              height="400"
+              preserveAspectRatio="none"
+              className="opacity-90"
+              style={{ filter: 'brightness(0.8) contrast(1.2)' }}
+            />
+          )}
 
           {/* Grid lines */}
           {[...Array(20)].map((_, i) => (
-            <line key={`v${i}`} x1={i * 20} y1="0" x2={i * 20} y2="300" stroke="#374151" strokeWidth="0.3" />
+            <line key={`v${i}`} x1={i * 20} y1="0" x2={i * 20} y2="400" stroke="#374151" strokeWidth="0.3" />
           ))}
           {[...Array(15)].map((_, i) => (
             <line key={`h${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#374151" strokeWidth="0.3" />
@@ -126,37 +161,10 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
             ROVER {autoRotate ? `${Math.round(roverHeading)}°` : ''}
           </text>
 
-          <circle cx={dronePos.x} cy={dronePos.y} r="4" fill="#38bdf8" stroke="#ffffff" strokeWIdth="1" />
+          <circle cx={dronePos.x} cy={dronePos.y} r="4" fill="#38bdf8" stroke="#ffffff" strokeWidth="1" />
           <text x={dronePos.x + 10} y={dronePos.y + 5} fill="#38bdf8" fontSize="8">
             DRONE
           </text>
-
-          {/* Create waypoints from coordinate array*/}
-          {coordinates.map((coord, idx) => (
-            <React.Fragment key={idx}>
-              <circle 
-              cx={coord.x} cy={coord.y} 
-              r="2" 
-              fill={visitedWaypoints.has(coord.id) ? "#22c55e" : "#fbbf24"} 
-              />
-              <text 
-              x={Number(coord.x) + 5} 
-              y={Number(coord.y) + 5} 
-              fill={visitedWaypoints.has(coord.id) ? "#22c55e" : "#fbbf24"} 
-              fontSize="6">
-                {visitedWaypoints.has(coord.id) ? "✓" : `WP${idx+1}`}
-              </text>
-            </React.Fragment>
-          ))}
-
-          {/* Path trace */}
-          <polyline
-            points={pathPoints}
-            fill="none"
-            stroke="#10b981"
-            strokeWidth="2"
-            strokeDasharray="3,2"
-          />
         </g>
 
         {/*TODO: Arrowhead for indicator */}
@@ -178,9 +186,19 @@ const MapPanel = ({roverPos, dronePos, coordinates, visitedWaypoints, roverHeadi
 
         {/* Coordinates display */}
         <div className="absolute bottom-4 left-4 text-xs space-y-1">
-          <div>LAT: 40.7128° N</div>
-          <div>LON: 74.0060° W</div>
-          <div>ALT: 10.2m</div>
+          {roverGPS ? (
+            <>
+              <div>LAT: {roverGPS.lat.toFixed(6)}°</div>
+              <div>LON: {roverGPS.lng.toFixed(6)}°</div>
+              <div>POS: {roverPos.x},{roverPos.y}</div>
+            </>
+          ) : (
+            <>
+              <div>LAT: 40.7128° N</div>
+              <div>LON: 74.0060° W</div>
+              <div>ALT: 10.2m</div>
+            </>
+          )}
         </div>
       </div>
     </div>
