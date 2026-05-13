@@ -1,13 +1,5 @@
 /**
  * SimpleCoordinateTransform - Essential GPS coordinate conversion utility
- *
- * Replaces CoordinateTransform.js (368 lines) with simplified version (30 lines)
- *
- * Preserves essential functions while removing complex multi-zoom transformations:
- * - GPS-to-viewport pixel conversion (maintains exact existing algorithm)
- * - Haversine distance calculation
- * - Bearing calculation
- * - Reference point calibration: GPS(43.071206, -89.409404) = Pixel(177, 150)
  */
 
 class SimpleCoordinateTransform {
