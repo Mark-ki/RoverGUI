@@ -11,7 +11,7 @@ Features:
 - Align chunks with existing coordinate system reference points
 
 Usage:
-    python chunk_generator.py --center 43.071,-89.409 --radius 1000 --output camp_randall
+    python chunk_generator.py --center 43.071,-89.409 (please give more accurate coordinates) --radius 1000 (in meters)
 """
 
 import argparse
@@ -20,10 +20,12 @@ import math
 import os
 import sys
 from pathlib import Path
+from tqdm import tqdm
 
 
 import requests
 from dotenv import load_dotenv
+
 load_dotenv()
 # Configuration
 # CHUNK_SIZE = 50       # meters -- deprecated
@@ -119,23 +121,24 @@ def generate_chunks(center_lat: float, center_lng: float, radius_meters: int, ou
     
     completed = 0
     # Loop to download all the chunks
-    for x_offset in grid_steps: # For every lat
-        for y_offset in grid_steps: # for every lat, lon pair
-            chunk_px_x = center_px_x + x_offset # lat
-            chunk_px_y = center_px_y + y_offset # lon
-            chunk_lat, chunk_lng = Mercator_to_gps(chunk_px_x, chunk_px_y, ZOOM_LEVEL)
+    with tqdm(total=total_chunks, desc="Downloading Chunks", unit="chunk", bar_format="{l_bar}{bar:40}{r_bar}") as pbar:
+        for x_offset in grid_steps: # For every lat
+            for y_offset in grid_steps: # for every lat, lon pair
+                chunk_px_x = center_px_x + x_offset # lat
+                chunk_px_y = center_px_y + y_offset # lon
+                chunk_lat, chunk_lng = Mercator_to_gps(chunk_px_x, chunk_px_y, ZOOM_LEVEL)
 
-            filename = f"chunk_{chunk_lat:.6f}_{chunk_lng:.6f}.jpg"
-            try:
-                download_chunk(chunk_lat, chunk_lng, filename, output_dir)
-                metadata["chunks"][filename] = {"centerGPS": [chunk_lat, chunk_lng], "filename": filename,}
+                filename = f"chunk_{chunk_lat:.6f}_{chunk_lng:.6f}.jpg"
+                try:
+                    download_chunk(chunk_lat, chunk_lng, filename, output_dir)
+                    metadata["chunks"][filename] = {"centerGPS": [chunk_lat, chunk_lng], "filename": filename,}
 
-                completed += 1
-                print(f"Progress: {completed}/{total_chunks} ({round(completed/total_chunks*100)}%)", end="", flush=True)
-            except requests.HTTPError as e:
-                print(f"Failed to download {filename}: {e}")
+                    pbar.update(1)
+                # print(f"Progress: {completed}/{total_chunks} ({round(completed/total_chunks*100)}%)", end="", flush=True)
+                except requests.HTTPError as e:
+                    tqdm.write(f"Failed to download {filename} : {e}")
     (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
-    print("All chunks downloaded, please check alignment to Mercator (should be fine)")
+    print("All chunks downloaded. System ready to launch")
 
 
 def main() -> None:
