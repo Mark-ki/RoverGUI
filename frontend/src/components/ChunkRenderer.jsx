@@ -34,6 +34,7 @@ const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady, 
     const MAP_ZOOM_LEVEL = 20; // Zoom level used for download
     const roverPx = SimpleCoordinateTransform.gpsToMercator(centerGPS.lat, centerGPS.lng, MAP_ZOOM_LEVEL);
     
+    // center to edge distance * 2 for smoothness, adjusted for zoom level along with edge spilling for preventing edge culling, and pan anchors
     const pixelThresh = (400/zoomScale) + 256 + (Math.max(Math.abs(panOffset.x), Math.abs(panOffset.y)) / zoomScale);    
 
     Object.values(metadata.chunks || {}).forEach(chunk => {

@@ -172,8 +172,8 @@ const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSys
             <image href={mapImg} width="400" height="400" preserveAspectRatio="none" className="opacity-90" style={{ filter: 'brightness(0.8) contrast(1.2)' }}/>
           )}
 
-          {/* Grid lines
-          {[...Array(20)].map((_, i) => (
+          {/* Grid lines */}
+          {/* {[...Array(20)].map((_, i) => (
             <line key={`v${i}`} x1={i * 20} y1="0" x2={i * 20} y2="400" stroke="#374151" strokeWidth="0.3" />
           ))}
           {[...Array(15)].map((_, i) => (
@@ -197,8 +197,8 @@ const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSys
           </text>
 
           {/*Drone Position */}
-          <circle cx={dronePos.x} cy={dronePos.y} r="4" fill="#38bdf8" stroke="#ffffff" strokeWidth="1" />
-          <text x={dronePos.x + 10} y={dronePos.y + 5} fill="#38bdf8" fontSize="8">DRONE</text>
+          {/* <circle cx={dronePos.x} cy={dronePos.y} r="4" fill="#38bdf8" stroke="#ffffff" strokeWidth="1" />
+          <text x={dronePos.x + 10} y={dronePos.y + 5} fill="#38bdf8" fontSize="8">DRONE</text> */}
         </g>
         </svg>
 
