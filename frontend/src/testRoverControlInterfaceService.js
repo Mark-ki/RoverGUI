@@ -4,32 +4,32 @@ import * as ROSLIB from 'roslib';
 class RosService{
     constructor() {
         this.rosConnected = false;
-        this.ros = new ROSLIB.Ros({ url: 'ws://localhost:8080'});
+        this.ros = new ROSLIB.Ros({ url: 'ws://localhost:9090'});
 
         this.activeTopics = new Map();
 
         this.GPS_BOUNDS = {
-            // Camp Randall
-            topLeft: {lat: 43.07137875207218, lon: -89.4105193240987 },
-            bottomRight: {lat: 43.069450361326695, lon: -89.40908605959572 }
-            // MDRS
-            // topLeft: {lat: 38.40866592666396, lon: -110.7981725030884 },
-            // bottomRight: {lat: 38.404310912256484, lon: -110.78619912271598 }
-        };
+            // Camp Randall
+            topLeft: {lat: 43.07137875207218, lon: -89.4105193240987 },
+            bottomRight: {lat: 43.069450361326695, lon: -89.40908605959572 }
+            // MDRS
+            // topLeft: {lat: 38.40866592666396, lon: -110.7981725030884 },
+            // bottomRight: {lat: 38.404310912256484, lon: -110.78619912271598 }
+        };
 
-        // Simulated rover state
-        this.simulatedRover = {
-            // Camp Randall
-            lat: 43.07120641748063,  // Start at MDRS
-            lon: -89.40940407925282,
-            heading: 0,               // degrees
-            speed: 0.00002
-            // MDRS
-            // lat: 38.406387616586926,  // Start at MDRS
-            // lon: -110.79167705199379,
-            // heading: 0,               // degrees
-            // speed: 0.00002 // degrees per step
-        };
+        // Simulated rover state ,
+        this.simulatedRover = {
+            // Camp Randall
+            lat: 43.071110406299404, // Start at MDRS
+            lon: -89.40940086294795,
+            heading: 0, // degrees
+            speed: 0.00002
+            // MDRS
+            // lat: 38.406387616586926,  // Start at MDRS
+            // lon: -110.79167705199379,
+            // heading: 0,               // degrees
+            // speed: 0.00002 // degrees per step
+        };
 
         this.ros.on('connection', () => {
             console.log('Connected to websocket');
@@ -107,7 +107,7 @@ class RosService{
                 messageType: messageType
             });
 
-            if (topicName === '/rover/gps' && messageType === 'sensor_msgs/NavSatFix'){
+            if (topicName === '/fix' && messageType === 'sensor_msgs/NavSatFix'){
                 console.log('Starting GPS simulation for testing ...');
 
                 const gpsInterval = setInterval(() => {
@@ -162,7 +162,7 @@ class RosService{
 
     startGpsTest(){
         console.log('Starting manual GPS test');
-        return this.subscribe('/rover/gps', 'sensor_msgs/NavSatFix', (msg) => {
+        return this.subscribe('/fix', 'sensor_msgs/NavSatFix', (msg) => {
             console.log('Received GPS test data: ', msg);
         });
     }
