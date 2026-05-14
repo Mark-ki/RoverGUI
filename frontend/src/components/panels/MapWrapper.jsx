@@ -8,7 +8,7 @@ const MapWrapper = () => {
   const [roverHeading, setRoverHeading] = useState(0); // Calculated here
   const prevRoverGps = useRef(null); // Calculated here
   const [currentRoverGPS, setCurrentRoverGPS] = useState(null); // Current GPS coordinates for tile system
-  const [missionArea, setMissionArea] = useState('camp_randall') // Change according to mission
+  const [missionArea, setMissionArea] = useState('camp_randall') // Change according to mission TODO
   // Tile system configuration - can be controlled via environment variable or user setting
   const [useTileSystem, setUseTileSystem] = useState(
     process.env.REACT_APP_USE_TILE_SYSTEM === 'true' || false

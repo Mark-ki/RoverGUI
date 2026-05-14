@@ -14,6 +14,8 @@ The process begins at the wrapper level. The `MapWrapper` acts as the bridge bet
 - It constantly listens to the `/rover1/ubx_nav_pvt` ROS topic for new GPS coordinates.
 - It calculates the rover's physical heading/bearing by comparing its new GPS coordinate against its previous one.
 - It funnels this live data (Latitude, Longitude, and Heading) down to the visual layer.
+- Can dynamically change mission areas by changing the filepath here. Must be done to load in new mission areas.
+`const [missionArea, setMissionArea] = useState('camp_randall') // Change according to mission TODO`
 
 ## 2. Mathematical Translation (`SimpleCoordinateTransform.js`)
 Because the Earth is a sphere and our computer screens are flat, we cannot simply map Latitude/Longitude directly to X/Y screen pixels. 
