@@ -17,11 +17,11 @@ class RosService{
             // bottomRight: {lat: 38.404310912256484, lon: -110.78619912271598 }
         };
 
-        // Simulated rover state
+        // Simulated rover state ,
         this.simulatedRover = {
             // Camp Randall
-            lat: 43.07065451210445, // Start at MDRS
-            lon: -89.40980923173,
+            lat: 43.071110406299404, // Start at MDRS
+            lon: -89.40940086294795,
             heading: 0, // degrees
             speed: 0.00002
             // MDRS
