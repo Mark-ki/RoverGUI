@@ -3,7 +3,7 @@ import mapImg from '../../assets/map_randall.png';
 import ChunkRenderer from '../ChunkRenderer';
 // import { MapPinIcon } from "lucide-react";
 
-const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = false}) => {
+const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = false, missionArea = 'camp_randall'}) => {
   const [autoZoom, setAutoZoom] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
   const [tileSystemReady, setTileSystemReady] = useState(false);
@@ -88,7 +88,7 @@ const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSys
     const zoomSensitivity = -0.002 // Adjust according to feel
     setManualZoomScale(prev => {
       const nextScale = prev + (e.deltaY * zoomSensitivity);
-      return Math.max(0.2, Math.min(nextScale, 2.2)); // Minimum zoom of 0.2x and max limit of 5.0x
+      return Math.max(0.02, Math.min(nextScale, 2.2)); // Minimum zoom of 0.2x and max limit of 5.0x
     });
   };
 
@@ -161,6 +161,7 @@ const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSys
                 fallbackImage={mapImg}
                 onTilesReady={setTileSystemReady}
                 panOffset={panOffset}
+                missionArea={missionArea}
               />
             </foreignObject>
           ) : null } 
