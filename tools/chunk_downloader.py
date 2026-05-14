@@ -99,7 +99,7 @@ def generate_chunks(center_lat: float, center_lng: float, radius_meters: int, ou
     print(f"Map Scale: {ground_resolution:.4f} meters/px")
     print(f"Tile covers exactly: {tile_width:.1f}x{tile_width:.1f} meters")
 
-    output_dir = Path("..") / "frontend" / "public" / "chunks"
+    output_dir = Path("..") / "frontend" / "public" / "chunks" / output_name
     output_dir.mkdir(parents=True, exist_ok=True)
 
     center_px_x, center_px_y = gps_to_Mercator(center_lat, center_lng, ZOOM_LEVEL) # Mercator proj of origin
@@ -118,27 +118,34 @@ def generate_chunks(center_lat: float, center_lng: float, radius_meters: int, ou
     grid_steps = range(-radius_pixels, radius_pixels + TILE_SIZE, TILE_SIZE) # Can use for both x and y as radius 2D
     total_chunks = len(grid_steps) * len(grid_steps) # Cuz 2D
     print(f"Total chunks to download: {total_chunks}")
-    
-    completed = 0
     # Loop to download all the chunks
-    with tqdm(total=total_chunks, desc="Downloading Chunks", unit="chunk", bar_format="{l_bar}{bar:40}{r_bar}") as pbar:
-        for x_offset in grid_steps: # For every lat
-            for y_offset in grid_steps: # for every lat, lon pair
-                chunk_px_x = center_px_x + x_offset # lat
-                chunk_px_y = center_px_y + y_offset # lon
-                chunk_lat, chunk_lng = Mercator_to_gps(chunk_px_x, chunk_px_y, ZOOM_LEVEL)
+    try:
+        with tqdm(total=total_chunks, desc="Downloading Chunks", unit="chunk", bar_format="{l_bar}{bar:40}{r_bar}") as pbar:
+            for x_offset in grid_steps: # For every lat
+                for y_offset in grid_steps: # for every lat, lon pair
+                    chunk_px_x = center_px_x + x_offset # lat
+                    chunk_px_y = center_px_y + y_offset # lon
+                    chunk_lat, chunk_lng = Mercator_to_gps(chunk_px_x, chunk_px_y, ZOOM_LEVEL)
 
-                filename = f"chunk_{chunk_lat:.6f}_{chunk_lng:.6f}.jpg"
-                try:
-                    download_chunk(chunk_lat, chunk_lng, filename, output_dir)
-                    metadata["chunks"][filename] = {"centerGPS": [chunk_lat, chunk_lng], "filename": filename,}
+                    filename = f"chunk_{chunk_lat:.6f}_{chunk_lng:.6f}.jpg"
+                    chunk_path = output_dir / filename
 
-                    pbar.update(1)
-                # print(f"Progress: {completed}/{total_chunks} ({round(completed/total_chunks*100)}%)", end="", flush=True)
-                except requests.HTTPError as e:
-                    tqdm.write(f"Failed to download {filename} : {e}")
-    (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
-    print("All chunks downloaded. System ready to launch")
+                    metadata["chunks"][filename] = {"centerGPS": [chunk_lat, chunk_lng], "filename": filename}
+                    if chunk_path.exists():
+                        pbar.update(1)
+                        continue
+
+                    try:
+                        download_chunk(chunk_lat, chunk_lng, filename, output_dir)
+                        pbar.update(1)
+                    except requests.HTTPError as e:
+                        tqdm.write(f"Failed to download {filename} : {e}")
+    except KeyboardInterrupt:
+        tqdm.write("\n Download paused by user (Ctrl + C). Run the exact same command later to resume.")
+    finally:
+        # Guarantee metadata saves even if we end early!
+        (output_dir / "metadata.json").write_text(json.dumps(metadata, indent=2))
+        print("All chunks downloaded. System ready to launch")
 
 
 def main() -> None:
@@ -166,4 +173,4 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-    # 43.07065451210445, -89.409809231738 - coords for camp randall
+    # 43.071110406299404, -89.40940086294795
