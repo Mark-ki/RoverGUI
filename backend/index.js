@@ -1,7 +1,6 @@
 const express = require("express");
 const http = require("http");
 const path = require('path');
-const { spawn } = require('child_process');
 const { Server } = require("socket.io");
 const cors = require("cors");
 const pty = require("node-pty");
@@ -9,9 +8,11 @@ const os = require("os");
 const WebSocket = require('ws');
 const dgram = require('dgram');
 const { createCanvas, loadImage } = require('canvas');
+const csv = require('csv-parser');
+const fs = require('fs');
+const zmq = require('zeromq');
 
-// --- Constants & Configuration (from common_utils.py) ---
-const MULTICAST_IP = "224.1.1.1";
+// --- Constants & Configuration ---
 const DISCOVERY_MESSAGE_TYPE = "WRECORDER_DISCOVERY";
 const DISCOVERY_VERSION = 1;
 const DISCOVERY_PORT = 5550;
@@ -50,58 +51,36 @@ io.on("connection", (socket) => {
     socket.on("disconnect", () => ptyProcess.kill());
 });
 
-// --- Utilities (Reimplemented from common_utils.py) ---
+// --- CSV Path Data Endpoint ---
+app.get('/path-data', (req, res) => {
+    const results = [];
+    const filePath = path.join(__dirname, '..', 'path.csv');
+
+    if (!fs.existsSync(filePath)) {
+        return res.json({ 
+            status: 'waiting', 
+            message: 'File does not exist yet. Retrying...', 
+            data: [] 
+        });
+    }
+
+    fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            res.json({ status: 'ready', data: results });
+        })
+        .on('error', (error) => {
+            res.status(500).json({ error: 'Error parsing CSV', details: error.message });
+        });
+});
+
+// --- Utilities ---
 function isValidPort(port) {
     return Number.isInteger(port) && port >= 1 && port <= 65535;
 }
 
-function buildSequentialPorts(basePort, count) {
-    if (!isValidPort(basePort) || !isValidPort(basePort + count - 1)) return null;
-    return Array.from({ length: count }, (_, i) => basePort + i);
-}
-
-function buildMosaicGrid(cameraCount) {
-    const columns = Math.ceil(Math.sqrt(cameraCount));
-    const rows = Math.ceil(cameraCount / columns);
-
-    return { columns, rows };
-}
-
-async function splitMosaicFrame(frameBuffer, targets, grid) {
-    const image = await loadImage(frameBuffer);
-    const tileWidth = Math.floor(image.width / grid.columns);
-    const tileHeight = Math.floor(image.height / grid.rows);
-
-    return targets.map((target) => {
-        const column = target.index % grid.columns;
-        const row = Math.floor(target.index / grid.columns);
-        const sourceX = column * tileWidth;
-        const sourceY = row * tileHeight;
-        const sourceWidth = column === grid.columns - 1 ? image.width - sourceX : tileWidth;
-        const sourceHeight = row === grid.rows - 1 ? image.height - sourceY : tileHeight;
-
-        const canvas = createCanvas(sourceWidth, sourceHeight);
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(
-            image,
-            sourceX,
-            sourceY,
-            sourceWidth,
-            sourceHeight,
-            0,
-            0,
-            sourceWidth,
-            sourceHeight
-        );
-
-        return {
-            port: target.port,
-            cameraId: target.cameraId,
-            frame: canvas.toBuffer('image/jpeg', { quality: 0.8 }),
-        };
-    });
-}
-
+// --- Discovery Logic ---
 function parseDiscoveryPayload(msg, nameFilter = null) {
     try {
         const payload = JSON.parse(msg.toString('utf8'));
@@ -112,122 +91,18 @@ function parseDiscoveryPayload(msg, nameFilter = null) {
         const basePort = payload.base_port;
         const streamCount = payload.stream_count;
         const mosaic = Boolean(payload.mosaic);
-        const cameraIds = Array.isArray(payload.camera_ids)
-            ? payload.camera_ids
-                .map((cameraId) => Number(cameraId))
-                .filter((cameraId) => Number.isInteger(cameraId))
-            : [];
 
         if (nameFilter && streamerName !== nameFilter) return null;
         if (!streamerIp || !streamerName || !isValidPort(basePort)) return null;
-        if (mosaic && cameraIds.length < 1) return null;
         if (!mosaic && streamCount < 1) return null;
 
-        return { streamerName, streamerIp, basePort, streamCount, mosaic, cameraIds };
+        // Force streamCount to 1 if mosaic is accidentally set but we are doing TCP
+        const finalStreamCount = mosaic ? 1 : streamCount;
+
+        return { streamerName, streamerIp, basePort, streamCount: finalStreamCount, mosaic };
     } catch (e) { return null; }
 }
 
-function startGStreamerPipeline(port, streamName, options = {}) {
-    const { splitTargets = null, mosaicGrid = null } = options;
-
-    // Matches the pipeline logic in SingleReceiver.start from receiver_utils.py
-    // but ends in jpegenc + fdsink for web streaming
-    if (activePorts.has(port)) {
-        logger.warn(`Pipeline for port ${port} already running`);
-        return;
-    }
-    activePorts.add(port);
-    logger.info(`Starting GStreamer pipeline for ${streamName} on port ${port}`);
-
-    const gst = spawn('gst-launch-1.0', [
-        'udpsrc', `multicast-group=${MULTICAST_IP}`, `port=${port}`, 'auto-multicast=true', '!',
-        'application/x-rtp,media=video,clock-rate=90000,payload=96,encoding-name=H264', '!',
-        'rtpjitterbuffer', 'latency=0', '!',
-        'rtph264depay', '!', 
-        'h264parse', '!', 
-        'avdec_h264', '!',
-        'videoconvert', '!', 
-        'jpegenc', 'quality=60', '!',
-        'fdsink'
-    ]);
-
-    gst.on('error', (err) => {
-        logger.error(`[GST ${port}] Failed to spawn: ${err.message}`);
-        activePorts.delete(port);
-    });
-
-    let buffer = Buffer.alloc(0);
-    const JPEG_START = Buffer.from([0xff, 0xd8]);
-    const JPEG_END = Buffer.from([0xff, 0xd9]);
-    // let frameCount = 0;
-
-    gst.stdout.on('data', (data) => {
-        buffer = Buffer.concat([buffer, data]);
-        if (buffer.length > 5000000) buffer = Buffer.alloc(0); 
-
-        let startIdx = buffer.indexOf(JPEG_START);
-        let endIdx = buffer.indexOf(JPEG_END);
-
-        while (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-            const frame = buffer.slice(startIdx, endIdx + 2);
-            // frameCount++;
-            
-            // if (frameCount % 30 === 0) {
-            //     logger.info(`[GST ${port}] Received frame ${frameCount}, clients: ${wss.clients.size}`);
-            // }
-
-            if (splitTargets && splitTargets.length > 0) {
-                splitMosaicFrame(frame, splitTargets, mosaicGrid)
-                    .then((splitFrames) => {
-                        for (const splitFrame of splitFrames) {
-                            const message = JSON.stringify({
-                                port: splitFrame.port,
-                                cameraId: splitFrame.cameraId,
-                                frame: splitFrame.frame.toString('base64')
-                            });
-
-                            wss.clients.forEach((client) => {
-                                if (client.readyState === WebSocket.OPEN) {
-                                    client.send(message, (err) => {
-                                        if (err) logger.error(`Send error: ${err.message}`);
-                                    });
-                                }
-                            });
-                        }
-                    })
-                    .catch((err) => logger.error(`[GST ${port}] Mosaic split failed: ${err.message}`));
-            } else {
-                const message = JSON.stringify({
-                    port: streamName, // Matches your frontend key 'port'
-                    frame: frame.toString('base64')
-                });
-
-                wss.clients.forEach((client) => {
-                    if (client.readyState === WebSocket.OPEN) {
-                        client.send(message, (err) => {
-                            if (err) logger.error(`Send error: ${err.message}`);
-                        });
-                    }
-                });
-            }
-            
-            buffer = buffer.slice(endIdx + 2);
-            startIdx = buffer.indexOf(JPEG_START);
-            endIdx = buffer.indexOf(JPEG_END);
-        }
-    });
-
-    gst.stderr.on('data', (data) => {
-        logger.warn(`[GST ${port}] stderr: ${data.toString().trim()}`);
-    });
-
-    gst.on('close', (code) => {
-        logger.info(`[GST ${port}] Pipeline closed with code ${code}.`); //  Sent ${frameCount} frames.`);
-        activePorts.delete(port);
-    });
-}
-
-// --- Discovery Logic (Equivalent to discover_stream_config) ---
 async function discoverStreamConfig(port, timeout, nameFilter = null) {
     const socket = dgram.createSocket({ type: 'udp4', reuseAddr: true });
     
@@ -253,72 +128,122 @@ async function discoverStreamConfig(port, timeout, nameFilter = null) {
     });
 }
 
-// --- Bridge (Equivalent to MultiReceiver/FrameStore) ---
-// --- Raw WebSocket server for forwarding frames ---
+// --- Raw WebSocket Server ---
+// Kept exactly as it is in your current version so the frontend connects normally
 const wss = new WebSocket.Server({ server, path: '/frames' });
 
 wss.on('connection', (socket) => {
     logger.info('Raw WebSocket client connected to /frames');
-    
-    socket.on('error', (err) => {
-        logger.error(`WebSocket client error: ${err.message}`);
-    });
-    
-    socket.on('close', () => {
-        logger.info('WebSocket client disconnected from /frames');
-    });
+    socket.on('error', (err) => logger.error(`WebSocket client error: ${err.message}`));
+    socket.on('close', () => logger.info('WebSocket client disconnected from /frames'));
 });
 
 wss.on('error', (err) => {
     logger.error(`WebSocket server error: ${err.message}`);
 });
 
-logger.info('Raw WebSocket server attached to HTTP server at /frames');
+// --- ZMQ Bridge (From Previous Version) ---
+class ZMQBridge {
+    constructor(zmqSources, wssInstance) {
+        this.zmqSources = zmqSources; 
+        this.wss = wssInstance; // Using the existing /frames WebSocket server
+        this.subscribers = [];
+    }
 
-// Track active ports to avoid spawning multiple pipelines for same port
-const activePorts = new Set();
+    async start() {
+        try {
+            for (const { zmqIp, zmqBasePort, streamCount, flip, streamerName } of this.zmqSources) {
+                for (let i = 0; i < streamCount; i++) {
+                    const port = zmqBasePort + i;
+                    const sock = new zmq.Subscriber();
+                    await sock.connect(`tcp://${zmqIp}:${port}`);
+                    sock.subscribe('');
+
+                    const streamId = `${streamerName}_${i}`;
+                    logger.info(`Connected to ZMQ stream ${streamId} at tcp://${zmqIp}:${port}`);
+
+                    this.subscribers.push({ sock, port });
+
+                    // Forward frames using the single port routing key
+                    this.forwardFrames(sock, port, flip[i]);
+                }
+            }
+        } catch (err) {
+            logger.error(`Error starting ZMQBridge: ${err.message}`);
+            this.close();
+        }
+    }
+
+    async forwardFrames(sock, port, flip) {
+        for await (const [msg] of sock) {
+            let base64Frame = msg.toString();
+
+            // Kept intact from previous version, but defaults to false in config
+            if (flip) {
+                base64Frame = await this.flipImage(base64Frame);
+            }
+
+            this.wss.clients.forEach((client) => {
+                if (client.readyState === WebSocket.OPEN) {
+                    client.send(JSON.stringify({
+                        port: port, // Matches frontend expectations
+                        frame: base64Frame,
+                        timestamp: Date.now()
+                    }));
+                }
+            });
+        }
+    }
+
+    async flipImage(base64Str) {
+        try {
+            const img = await loadImage(Buffer.from(base64Str, 'base64'));
+            const canvas = createCanvas(img.width, img.height);
+            const ctx = canvas.getContext('2d');
+
+            ctx.translate(img.width, img.height);
+            ctx.scale(-1, -1);
+            ctx.drawImage(img, 0, 0);
+
+            return canvas.toDataURL().split(',')[1];
+        } catch (err) {
+            logger.error(`Error flipping image: ${err.message}`);
+            return base64Str;
+        }
+    }
+
+    close() {
+        this.subscribers.forEach(({ sock }) => sock.close());
+    }
+}
 
 // --- Main Execution ---
 (async () => {
-    
-
     const streamers = ["cam-pi-1", "cam-pi-2"];
+    const zmqSources = [];
 
     for (const name of streamers) {
         const config = await discoverStreamConfig(DISCOVERY_PORT, DISCOVERY_TIMEOUT_SECONDS, name);
-        if (!config) {
-            continue;
-        }
-
-        if (config.mosaic) {
-            const splitTargets = config.cameraIds.map((cameraId, index) => ({
-                port: config.basePort + index,
-                cameraId,
-                index,
-            }));
-            const mosaicGrid = buildMosaicGrid(splitTargets.length);
-
-            logger.info(
-                `Mosaic stream detected for '${config.streamerName}'. Splitting ${splitTargets.length} camera feeds from port ${config.basePort}.`
-            );
-
-            startGStreamerPipeline(config.basePort, `${config.streamerName}_mosaic`, {
-                splitTargets,
-                mosaicGrid,
+        if (config) {
+            zmqSources.push({ 
+                zmqIp: config.streamerIp, 
+                zmqBasePort: config.basePort, 
+                streamCount: config.streamCount, 
+                streamerName: config.streamerName,
+                // Creates an array of `false` values matching the stream count to skip the laggy flip function
+                flip: Array(config.streamCount).fill(false) 
             });
-        } else {
-            // Loop through the stream count found in discovery
-            for (let i = 0; i < config.streamCount; i++) {
-                const port = config.basePort + i;
-                const streamId = `${config.streamerName}_${i}`;
-                startGStreamerPipeline(port, streamId);
-            }
         }
     }
+
+    // Pass our sources and our existing wss instance to the Bridge
+    const bridge = new ZMQBridge(zmqSources, wss);
+    bridge.start().catch((err) => logger.error(err.message));
 
     // Graceful Shutdown
     process.on('SIGINT', () => {
         logger.info("Shutting down...");
+        bridge.close();
         process.exit();
     });
 })();
