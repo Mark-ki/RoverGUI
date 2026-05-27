@@ -10,12 +10,21 @@ function CameraPanelCV() {
   const streamRefsRef = useRef({});
   const [cameras, setCameras] = useState(["CAM1", "CAM2", "CAM3"]);
 
+  const [flippedCameras, setFlippedCameras] = useState({});
+
   // Map tabs to port indices (adjust ports based on your backend)
   const portList = Object.keys(streams).sort(); 
   const getPortByCam = (camName) => {
     const index = parseInt(camName.replace('CAM', '')) - 1;
     return portList[index];
   };
+
+  const toggleFlip = (camId) => {
+  setFlippedCameras((prev) => ({
+    ...prev,
+    [camId]: !prev[camId],
+  }));
+};
 
   const addCameraTab = () => {
     if(cameras.length >= 8) return; // Limit to 6 cameras
@@ -139,24 +148,41 @@ function CameraPanelCV() {
           {activeCameraTab !== "FULL" ? (
             <div className="grid grid-rows-[1fr,auto] gap-1 h-full">
               {/* Primary Focus Camera */}
-              <RenderStream 
-                port={getPortByCam(activeCameraTab)} 
-                label={activeCameraTab} 
-                className="aspect-video"
-              />
-
+                <div
+                  key={activeCameraTab}
+                  onClick={() => toggleFlip(activeCameraTab)}
+                  className="cursor-pointer transition-transform duration-300 ease-in-out"
+                  style={{ transform: !!flippedCameras[activeCameraTab] ? 'rotate(180deg)' : 'none' }}
+                >
+                  <RenderStream
+                    port={getPortByCam(activeCameraTab)}
+                    label={activeCameraTab}
+                    className="aspect-video pointer-events-none"
+                  />
+                </div>
+                
               {/* Secondary Bottom Row (The other two cameras) */}
               <div className="grid grid-cols-2 gap-1">
                 {cameras
                   .filter((cam) => cam !== activeCameraTab)
-                  .map((cam) => (
-                    <RenderStream 
-                      key={cam} 
-                      port={getPortByCam(cam)} 
-                      label={cam} 
-                      className="aspect-video" 
-                    />
-                  ))}
+                  .map((cam) => {
+                    const isFlipped = !!flippedCameras[cam];
+
+                    return (
+                      <div
+                        key={cam}
+                        onClick={() => toggleFlip(cam)}
+                        className="cursor-pointer transition-transform duration-300 ease-in-out"
+                        style={{ transform: isFlipped ? 'rotate(180deg)' : 'none' }}
+                      >
+                        <RenderStream
+                          port={getPortByCam(cam)}
+                          label={cam}
+                          className="aspect-video pointer-events-none"
+                        />
+                      </div>
+                    );
+                  })}
               </div>
             </div>
           ) : (
@@ -169,14 +195,25 @@ function CameraPanelCV() {
               <RenderStream port={portList[2]} label="CAM3" className="col-span-2 aspect-video" />
 
               map */}
-              {cameras.map((cam) => (
-                <RenderStream 
-                  key={cam}
-                  port={getPortByCam(cam)}
-                  label={cam}
-                  className="aspect-video"
-                />
-              ))}
+
+              {cameras.map((cam) => {
+                const isFlipped = !!flippedCameras[cam];
+
+                return (
+                  <div 
+                    key={cam} 
+                    onClick={() => toggleFlip(cam)}
+                    className="cursor-pointer transition-transform duration-300"
+                    style={{ transform: isFlipped ? 'rotate(180deg)' : 'none' }}
+                  >
+                    <RenderStream 
+                      port={getPortByCam(cam)}
+                      label={cam}
+                      className="aspect-video pointer-events-none" 
+                    />
+                  </div>
+                );
+              })}
 
               <RosImagePanel topicName={"/detection_image"}></RosImagePanel>
               <RosImagePanel topicName={"/panorama"}></RosImagePanel>
