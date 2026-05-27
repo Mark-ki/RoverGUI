@@ -4,7 +4,7 @@ import { Panel, PanelGroup, PanelResizeHandle } from "react-resizable-panels";
 import '../output.css';
 import Header from './Header';
 import ControlPanel from './panels/ControlPanel';
-import CameraPanel from './panels/CameraPanelCV';
+import CameraPanel from './panels/CameraPanelGstreamer';
 import TerminalTabs from './TerminalTabs';
 import MapWrapper from './panels/MapWrapper';
 
