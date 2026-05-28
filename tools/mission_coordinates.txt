@@ -1,0 +1,12 @@
+south_site = 38.3980267, -110.7924360 (500m radius) - science mission
+north_site = 38.4226632, -110.7847595  (2 km radius) - autonomous and equipment servicing
+hab_site = 38.4064219, -110.7919264 (1.5 km radius) - extreme delivery
+test_site = 38.3716643894475, -110.70433206126005 (100 m radius) - whispering sands motel
+
+Commands to run in order:
+1) python3 chunk_downloader.py --center 38.3980267, -110.7924360 --radius 500 --output "south_site"
+2) python3 chunk_downloader.py --center 38.4064219, -110.7919264 --radius 1500 --output "hab_site"
+3) python3 chunk_downloader.py --center 38.4226632, -110.7847595 --radius 2000 --output "north_site"
+
+Commands which have been run:
+1) python3 chunk_downloader.py --center 38.3716643894475, -110.70433206126005 --radius 100 --output "test_site"

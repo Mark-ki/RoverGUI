@@ -23,7 +23,7 @@ Run the script using Python and provide the center coordinates and radius.
 
 **Example Command:**
 ```bash
-python chunk_downloader.py --center 43.07065451210445,-89.409809231738 --radius 100
+python chunk_downloader.py --center "43.07065451210445,-89.409809231738" --radius 100 --output "[your_mission_area]"
 ```
 
 ### Arguments

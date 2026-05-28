@@ -8,11 +8,9 @@ const MapWrapper = () => {
   const [roverPos, setRoverPos] = useState({x:200, y:200}); // Value here is fixed, will always be at this.
   const prevRoverGps = useRef(null); // Calculated here
   const [currentRoverGPS, setCurrentRoverGPS] = useState(null); // Current GPS coordinates for tile system
-  const [missionArea, setMissionArea] = useState('camp_randall') // Change according to mission TODO
+  const [missionArea, setMissionArea] = useState('test_site') // Change according to mission TODO
   // Tile system configuration - can be controlled via environment variable or user setting
-  const [useTileSystem, setUseTileSystem] = useState(
-    process.env.REACT_APP_USE_TILE_SYSTEM === 'true' || false
-  );
+  const [useTileSystem, setUseTileSystem] = useState(true);
 
   const [dronePos, setDronePos] = useState({x:250, y:250}); // Input from ros - will need to figure out later as map centered on rover
 

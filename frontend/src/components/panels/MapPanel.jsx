@@ -4,7 +4,9 @@ import ChunkRenderer from '../ChunkRenderer';
 import SimpleCoordinateTransform from '../../utils/SimpleCoordinateTransform'; // Adjust path as needed
 // import { MapPinIcon } from "lucide-react";
 
-const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = false, missionArea = 'camp_randall'}) => {
+const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = true, missionArea = 'camp_randall'}) => {
+  console.log("Rover GPS", roverGPS);
+  console.log(useTileSystem);
   const [autoZoom, setAutoZoom] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
   const [tileSystemReady, setTileSystemReady] = useState(false);
