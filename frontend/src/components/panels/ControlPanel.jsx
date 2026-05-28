@@ -179,6 +179,7 @@ const ControlPanel = ({ onAction }) => {
   const accel = useRosTopic('/acceleration', 'std_msgs/Float32');
   const distance = useRosTopic('/distance', 'std_msgs/Float32');
   // const compass = useRosTopic('/compass_data_topic', 'std_msgs/Float64');
+  const stateMachineState = useRosTopic('/state_machine_state', 'std_msgs/String');
   const compass = useRosTopic('/heading', 'std_msgs/Float32');
   
     useEffect(() => {
@@ -257,7 +258,7 @@ const ControlPanel = ({ onAction }) => {
               {/* Column 1: Current Position */}
               <div className="flex flex-col gap-2">
                 <div className="text-blue-500 uppercase tracking-widest font-bold text-center mb-1">
-                  Current Position
+                  Position
                 </div>
                 <DataBox label="X" value={`${x?.data?.toFixed(2) || 0} m`} />
                 <DataBox label="Y" value={`${y?.data?.toFixed(2) || 0} m`} />
@@ -266,7 +267,7 @@ const ControlPanel = ({ onAction }) => {
               {/* Column 2: Current Motion */}
               <div className="flex flex-col gap-2">
                 <div className="text-blue-500 uppercase tracking-widest font-bold text-center mb-1">
-                  Current Motion
+                  Motion
                 </div>
                 <DataBox label="VEL X" value={`${velX?.data?.toFixed(2) || 0} m/s`} />
                 <DataBox label="VEL Y" value={`${velY?.data?.toFixed(2) || 0} m/s`} />
@@ -275,12 +276,19 @@ const ControlPanel = ({ onAction }) => {
               {/* Column 3: Navigation Dynamics */}
               <div className="flex flex-col gap-2">
                 <div className="text-blue-500 uppercase tracking-widest font-bold text-center mb-1">
-                  Navigation Dynamics
+                  Navigation
                 </div>
                 <DataBox label="DIST" value={`${distance?.data?.toFixed(2) || 0} m`} />
                 <DataBox label="ACC" value={`${accel?.data?.toFixed(2) || 0} m/s²`} />
               </div>
             </div>
+
+            <div className="text-xs uppercase tracking-widest text-blue-500 font-bold mb-2">
+              State Machine
+            </div>
+
+            <DataBox label="Current State:" value={`${stateMachineState?.data || "Null"}`} />
+
 
             {/* ================= POWER ================= */}
             <div className="text-xs uppercase tracking-widest text-blue-500 font-bold mb-2">
