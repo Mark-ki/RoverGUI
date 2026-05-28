@@ -4,6 +4,7 @@ import SimpleCoordinateTransform from '../utils/SimpleCoordinateTransform';
 // and change this URL to just `/chunks/`
 
 const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady, panOffset = {x: 0, y: 0}, missionArea = 'camp_randall' }) => {
+  console.log("Chunk Renderer called");
   const [metadata, setMetadata] = useState(null);
   const [loadedChunks, setLoadedChunks] = useState(new Map());
   const [error, setError] = useState(false);

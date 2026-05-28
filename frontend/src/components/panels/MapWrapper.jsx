@@ -8,11 +8,9 @@ const MapWrapper = () => {
   const [roverHeading, setRoverHeading] = useState(0); // Calculated here
   const prevRoverGps = useRef(null); // Calculated here
   const [currentRoverGPS, setCurrentRoverGPS] = useState(null); // Current GPS coordinates for tile system
-  const [missionArea, setMissionArea] = useState('camp_randall') // Change according to mission TODO
+  const [missionArea, setMissionArea] = useState('test_site') // Change according to mission TODO
   // Tile system configuration - can be controlled via environment variable or user setting
-  const [useTileSystem, setUseTileSystem] = useState(
-    process.env.REACT_APP_USE_TILE_SYSTEM === 'true' || false
-  );
+  const [useTileSystem, setUseTileSystem] = useState(true);
 
   const [dronePos, setDronePos] = useState({x:250, y:250}); // Input from ros - will need to figure out later as map centered on rover
 
@@ -35,7 +33,7 @@ const MapWrapper = () => {
     const handleRoverGpsUpdate = (message) => {
       try{
       console.log('Rover position update:', message);
-      if (message.gnss_fix_ok === true){
+      if (message.gnss_fix_ok === false){
         console.warn('No GPS fix available');
         return;
       }
@@ -44,8 +42,8 @@ const MapWrapper = () => {
         const heading = calculateBearing(
           prevRoverGps.current.lat,
           prevRoverGps.current.lng,
-          message.lat,
-          message.lon
+          message.lat * Math.pow(10, -7),
+          message.lon * Math.pow(10, -7)
         );
       console.log('Calculated rover heading', heading);
       setRoverHeading(heading);
@@ -53,10 +51,10 @@ const MapWrapper = () => {
       }
 
       // Set GPS coordinates for tile system
-      setCurrentRoverGPS({ lat: message.lat, lng: message.lon });
+      setCurrentRoverGPS({ lat: message.lat * Math.pow(10, -7), lng: message.lon * Math.pow(10, -7)});
       // console.log("New rover position: ", newPos);
       // console.log("Calling setPrevRoverGPS");
-      prevRoverGps.current = {lat: message.lat, lng: message.lon};
+      prevRoverGps.current = {lat: message.lat * Math.pow(10, -7), lng: message.lon * Math.pow(10, -7)};
     } catch (error) {
       console.error("Error in handleRoverGpsUpdate: ", error);
     }

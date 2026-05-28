@@ -3,7 +3,9 @@ import mapImg from '../../assets/map_randall.png';
 import ChunkRenderer from '../ChunkRenderer';
 // import { MapPinIcon } from "lucide-react";
 
-const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = false, missionArea = 'camp_randall'}) => {
+const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = true, missionArea = 'camp_randall'}) => {
+  console.log("Rover GPS", roverGPS);
+  console.log(useTileSystem);
   const [autoZoom, setAutoZoom] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
   const [tileSystemReady, setTileSystemReady] = useState(false);

@@ -176,7 +176,7 @@ class ZMQBridge {
 
     async forwardFrames(sock, port, flip) {
         for await (const [msg] of sock) {
-            let base64Frame = msg.toString();
+            let base64Frame = Buffer.from(msg).toString('base64');
 
             // Kept intact from previous version, but defaults to false in config
             if (flip) {
