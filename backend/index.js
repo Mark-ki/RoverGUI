@@ -9,6 +9,9 @@ const os = require("os");
 const WebSocket = require('ws');
 const dgram = require('dgram');
 const { createCanvas, loadImage } = require('canvas');
+const csv = require('csv-parser');
+const fs = require('fs');
+const zmq = require('zeromq');
 
 // --- Constants & Configuration (from common_utils.py) ---
 const MULTICAST_IP = "224.1.1.1";
@@ -48,6 +51,30 @@ io.on("connection", (socket) => {
     socket.on("input", (input) => ptyProcess.write(input));
     socket.on("resize", ({ cols, rows }) => ptyProcess.resize(cols, rows));
     socket.on("disconnect", () => ptyProcess.kill());
+});
+
+// --- CSV Path Data Endpoint ---
+app.get('/path-data', (req, res) => {
+    const results = [];
+    const filePath = path.join(__dirname, '..', 'path.csv');
+
+    if (!fs.existsSync(filePath)) {
+        return res.json({ 
+            status: 'waiting', 
+            message: 'File does not exist yet. Retrying...', 
+            data: [] 
+        });
+    }
+
+    fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            res.json({ status: 'ready', data: results });
+        })
+        .on('error', (error) => {
+            res.status(500).json({ error: 'Error parsing CSV', details: error.message });
+        });
 });
 
 // --- Utilities (Reimplemented from common_utils.py) ---
