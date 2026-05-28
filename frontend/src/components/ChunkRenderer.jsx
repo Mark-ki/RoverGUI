@@ -7,7 +7,7 @@ const ChunkRenderer = ({ centerGPS, zoomScale = 1, fallbackImage, onTilesReady, 
   const [metadata, setMetadata] = useState(null);
   const [loadedChunks, setLoadedChunks] = useState(new Map());
   const [error, setError] = useState(false);
-  console.log(missionArea)
+  // console.log(missionArea)
   const chunksBaseUrl = `/chunks/${missionArea}/`;
 
   const [loadedKeys, setLoadedKeys] = useState(new Set());

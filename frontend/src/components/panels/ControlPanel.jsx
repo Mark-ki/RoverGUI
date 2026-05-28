@@ -178,7 +178,8 @@ const ControlPanel = ({ onAction }) => {
   const velY = useRosTopic('/yvelocity', 'std_msgs/Float32');
   const accel = useRosTopic('/acceleration', 'std_msgs/Float32');
   const distance = useRosTopic('/distance', 'std_msgs/Float32');
-  const compass = useRosTopic('/compass_data_topic', 'std_msgs/Float64');
+  // const compass = useRosTopic('/compass_data_topic', 'std_msgs/Float64');
+  const compass = useRosTopic('/heading', 'std_msgs/Float32');
   
     useEffect(() => {
       const interval = setInterval(() => {
