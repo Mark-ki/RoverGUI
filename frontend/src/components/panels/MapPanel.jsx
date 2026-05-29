@@ -264,7 +264,7 @@ const convertedPathPoints = useMemo(() => {
           <g>
             {convertedPathPoints.map((pt, idx) => {
               if (idx === convertedPathPoints.length - 1) return null;
-
+ 
               const nextPt = convertedPathPoints[idx + 1];
 
               // Calculate the distance and angle between this point and the next point.
@@ -372,7 +372,7 @@ const convertedPathPoints = useMemo(() => {
             {autoRotate ? (
               <g transform={`translate(${roverPos.x}, ${roverPos.y}) rotate(${roverHeading})`}>
                 {/* Scale the geometry down relative to zoom */}
-                <g transform={`scale(${2 / zoomScale})`}>
+                <g transform={`scale(${1 / zoomScale})`}>
                   <polygon points="0,-6 -3,4 0,2 3,4" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
                 </g>
               </g>

@@ -24,7 +24,7 @@ const MapWrapper = () => {
     const handleRoverGpsUpdate = (message) => {
       try{
       // console.log('Rover position update:', message);
-      if (message.gnss_fix_ok === true){
+      if (message.gnss_fix_ok === false){
         console.warn('No GPS fix available');
         return;
       }

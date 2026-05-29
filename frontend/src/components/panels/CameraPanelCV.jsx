@@ -41,7 +41,8 @@ function CameraPanelCV() {
 
 
   useEffect(() => {
-    const ws = new WebSocket('ws://localhost:3001/frames');
+    const host = window.location.hostname;
+    const ws = new WebSocket(`ws://${host}:3001/frames`);
     wsRef.current = ws;
     
     ws.onopen = () => {
