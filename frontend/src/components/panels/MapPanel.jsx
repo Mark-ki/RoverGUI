@@ -5,8 +5,8 @@ import SimpleCoordinateTransform from '../../utils/SimpleCoordinateTransform'; /
 // import { MapPinIcon } from "lucide-react";
 
 const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = true, missionArea = 'camp_randall'}) => {
-  console.log("Rover GPS", roverGPS);
-  console.log(useTileSystem);
+  // console.log("Rover GPS", roverGPS);
+  // console.log(useTileSystem);
   const [autoZoom, setAutoZoom] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
   const [tileSystemReady, setTileSystemReady] = useState(false);
@@ -90,7 +90,7 @@ const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSys
 
   // Fallback map layout (Non-tile system)
   return `translate(${panOffset.x}, ${panOffset.y}) scale(${zoomScale})`;
-}, [autoZoom, useTileSystem, panOffset, zoomScale, roverPos.x, roverPos.y]);
+}, [autoZoom, useTileSystem, panOffset, zoomScale]);
 
 // const svgTransform = useMemo(() => {
 
@@ -300,58 +300,72 @@ const convertedPathPoints = useMemo(() => {
           </g>
         )}
 
-            {convertedPathPoints.map((pt, idx) => {
+        {(() => {
+          // Local variables to track the last drawn circle within this loop execution
+          let lastDrawnCircleX = null;
+          let lastDrawnCircleY = null;
+          const MIN_CIRCLE_GAP = 300; // Skip rendering circles if they are closer than 300 pixels apart
 
-              if(pt.label == "waypoint" && idx % 2 === 0){
+          return convertedPathPoints.map((pt, idx) => {
+            const radius = 6 / zoomScale;
+            const strokeW = 1 / zoomScale;
+            const fontSize = 16 / zoomScale;
+            const textOffset = 10 / zoomScale;
+
+            const labelColors = {
+              waypoint: "#3b82f6",
+              gnss: "#eab308", 
+              aruco1: "#ef4444", 
+              aruco2: "#ec4899",  
+              bottle: "#10b981",  
+              hammer: "#a855f7",   
+              mallet: "#f97316",  
+            };
+
+            const markerColor = labelColors[pt.label] ? labelColors[pt.label] : "#3b82f6";
+            const shouldShowText = pt.label && pt.label !== "waypoint";
+
+            if (pt.label === "waypoint" && lastDrawnCircleX !== null && lastDrawnCircleY !== null) {
+              const dx = pt.x - lastDrawnCircleX;
+              const dy = pt.y - lastDrawnCircleY;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+
+              if (distance < MIN_CIRCLE_GAP) {
                 return null;
               }
-              const radius = 8 / zoomScale;
-              const strokeW = 1 / zoomScale;
-              const fontSize = 16 / zoomScale;
-              const textOffset = 10 / zoomScale;
+            }
 
-              // Define colors based on the label type
-              // console.log('Rendering point:', pt);
-              const labelColors = {
-                waypoint: "#3b82f6",
-                gnss: "#eab308", 
-                aruco1: "#ef4444", 
-                aruco2: "#ec4899",  
-                bottle: "#10b981",  
-                hammer: "#a855f7",   
-                mallet: "#f97316",  
-              };
-              // console.log(labelColors[pt.label], 'for label', pt.label);
-              const markerColor = labelColors[pt.label] ? labelColors[pt.label] : "#3b82f6";
-              
-              const shouldShowText = pt.label && pt.label !== "waypoint";
+            // Update anchors only when we actually commit to rendering a circle element
+            lastDrawnCircleX = pt.x;
+            lastDrawnCircleY = pt.y;
 
-              return (
-                <g key={`csv-pt-${idx}`}>
-                  <circle 
-                    cx={pt.x} 
-                    cy={pt.y} 
-                    r={radius} 
-                    fill={markerColor} 
-                    stroke="#0f172a" 
-                    strokeWidth={strokeW} 
-                  />
-                  
-                  {shouldShowText && (
-                    <text
-                      x={pt.x + textOffset}
-                      y={pt.y + (fontSize / 3)}
-                      fill="#000000"
-                      fontSize={fontSize}
-                      className="font-mono select-none"
-                      style={{ pointerEvents: 'none' }}
-                    >
-                      {pt.label}
-                    </text>
-                  )}
-                </g>
-              );
-            })}
+            return (
+              <g key={`csv-pt-${idx}`}>
+                <circle 
+                  cx={pt.x} 
+                  cy={pt.y} 
+                  r={radius} 
+                  fill={markerColor} 
+                  stroke="#0f172a" 
+                  strokeWidth={strokeW} 
+                />
+                
+                {shouldShowText && (
+                  <text
+                    x={pt.x + textOffset}
+                    y={pt.y + (fontSize / 3)}
+                    fill="#000000"
+                    fontSize={fontSize}
+                    className="font-mono select-none"
+                    style={{ pointerEvents: 'none' }}
+                  >
+                    {pt.label}
+                  </text>
+                )}
+              </g>
+            );
+          });
+        })()}
 
 
             {/* Rover position */}
