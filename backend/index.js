@@ -1,7 +1,6 @@
 const express = require("express");
 const http = require("http");
 const path = require('path');
-const { spawn } = require('child_process');
 const { Server } = require("socket.io");
 const cors = require("cors");
 const pty = require("node-pty");
@@ -11,7 +10,6 @@ const dgram = require('dgram');
 const { createCanvas, loadImage } = require('canvas');
 const csv = require('csv-parser');
 const fs = require('fs');
-const zmq = require('zeromq');
 
 // --- Constants & Configuration (from common_utils.py) ---
 const DISCOVERY_MESSAGE_TYPE = "WRECORDER_DISCOVERY";
