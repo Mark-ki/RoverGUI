@@ -260,7 +260,8 @@ const convertedPathPoints = useMemo(() => {
               DRONE
             </text> */}
 
-            {convertedPathPoints.length > 1 && (
+              //Temporarily disabled path for extreme delivery
+            {false && convertedPathPoints.length > 1 && (
           <g>
             {convertedPathPoints.map((pt, idx) => {
               if (idx === convertedPathPoints.length - 1) return null;
@@ -304,10 +305,12 @@ const convertedPathPoints = useMemo(() => {
           // Local variables to track the last drawn circle within this loop execution
           let lastDrawnCircleX = null;
           let lastDrawnCircleY = null;
-          const MIN_CIRCLE_GAP = 300; // Skip rendering circles if they are closer than 300 pixels apart
+          const pixelPerMeter = 9.15;
+          // Set to 0 temporarily for extreme delivery
+          const MIN_CIRCLE_GAP = 0; // Skip rendering circles if they are closer than 300 pixels apart
 
           return convertedPathPoints.map((pt, idx) => {
-            const radius = 6 / zoomScale;
+            const radius = 3 / zoomScale;
             const strokeW = 1 / zoomScale;
             const fontSize = 16 / zoomScale;
             const textOffset = 10 / zoomScale;
@@ -320,6 +323,7 @@ const convertedPathPoints = useMemo(() => {
               bottle: "#10b981",  
               hammer: "#a855f7",   
               mallet: "#f97316",  
+              circle: "#f6ce3b",
             };
 
             const markerColor = labelColors[pt.label] ? labelColors[pt.label] : "#3b82f6";
@@ -341,6 +345,18 @@ const convertedPathPoints = useMemo(() => {
 
             return (
               <g key={`csv-pt-${idx}`}>
+                {pt.label === "circle" && (
+                  <circle
+                    cx={pt.x}
+                    cy={pt.y}
+                    r={20 * pixelPerMeter}
+                    fill="rgba(246, 206, 59, 0.15)" // Subtle semi-transparent yellow fill
+                    stroke={markerColor}
+                    strokeWidth={2 / zoomScale} // Scaling the stroke so it looks uniform when zooming
+                    strokeDasharray={`${8 / zoomScale},${4 / zoomScale}`} // Dashed appearance
+                  />
+                )}
+
                 <circle 
                   cx={pt.x} 
                   cy={pt.y} 
@@ -372,7 +388,7 @@ const convertedPathPoints = useMemo(() => {
             {autoRotate ? (
               <g transform={`translate(${roverPos.x}, ${roverPos.y}) rotate(${roverHeading})`}>
                 {/* Scale the geometry down relative to zoom */}
-                <g transform={`scale(${1 / zoomScale})`}>
+                <g transform={`scale(${1.5 / zoomScale})`}>
                   <polygon points="0,-6 -3,4 0,2 3,4" fill="#ef4444" stroke="#ffffff" strokeWidth="1" />
                 </g>
               </g>
