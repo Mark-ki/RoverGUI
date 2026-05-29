@@ -77,6 +77,7 @@ const ConsolePanel = (props) => {
         width: "100%",
         height: "100%",
         padding: "10px",
+        paddingTop: "0px",
         backgroundColor: "rgb(16, 20, 32)",
       }}
     />

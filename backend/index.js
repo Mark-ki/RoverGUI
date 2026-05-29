@@ -9,12 +9,14 @@ const os = require("os");
 const WebSocket = require('ws');
 const dgram = require('dgram');
 const { createCanvas, loadImage } = require('canvas');
+const csv = require('csv-parser');
+const fs = require('fs');
 
 // --- Constants & Configuration (from common_utils.py) ---
-const MULTICAST_IP = "224.1.1.1";
 const DISCOVERY_MESSAGE_TYPE = "WRECORDER_DISCOVERY";
 const DISCOVERY_VERSION = 1;
 const DISCOVERY_PORT = 5550;
+const CONTROL_PORT = 5551;
 const DISCOVERY_TIMEOUT_SECONDS = 5.0;
 
 const logger = {
@@ -48,6 +50,30 @@ io.on("connection", (socket) => {
     socket.on("input", (input) => ptyProcess.write(input));
     socket.on("resize", ({ cols, rows }) => ptyProcess.resize(cols, rows));
     socket.on("disconnect", () => ptyProcess.kill());
+});
+
+// --- CSV Path Data Endpoint ---
+app.get('/path-data', (req, res) => {
+    const results = [];
+    const filePath = path.join(__dirname, '..', 'path.csv');
+
+    if (!fs.existsSync(filePath)) {
+        return res.json({ 
+            status: 'waiting', 
+            message: 'File does not exist yet. Retrying...', 
+            data: [] 
+        });
+    }
+
+    fs.createReadStream(filePath)
+        .pipe(csv())
+        .on('data', (data) => results.push(data))
+        .on('end', () => {
+            res.json({ status: 'ready', data: results });
+        })
+        .on('error', (error) => {
+            res.status(500).json({ error: 'Error parsing CSV', details: error.message });
+        });
 });
 
 // --- Utilities (Reimplemented from common_utils.py) ---
@@ -127,6 +153,40 @@ function parseDiscoveryPayload(msg, nameFilter = null) {
     } catch (e) { return null; }
 }
 
+function getLocalIp(targetIp) {
+    return new Promise((resolve, reject) => {
+        const tempSocket = dgram.createSocket('udp4');
+        tempSocket.connect(80, targetIp, () => {
+            const ip = tempSocket.address().address;
+            tempSocket.close();
+            resolve(ip);
+        });
+        tempSocket.on('error', (err) => {
+            tempSocket.close();
+            reject(err);
+        });
+    });
+}
+
+function sendSubscribeRequest(streamerIp, controlPort, receiverIp, ports) {
+    return new Promise((resolve, reject) => {
+        const client = dgram.createSocket('udp4');
+        const message = Buffer.from(JSON.stringify({
+            type: "SUBSCRIBE_REQUEST",
+            receiver_ip: receiverIp,
+            ports: ports
+        }));
+        client.send(message, controlPort, streamerIp, (err) => {
+            client.close();
+            if (err) reject(err);
+            else {
+                logger.info(`Sent SUBSCRIBE_REQUEST to ${streamerIp}:${controlPort} for ports [${ports.join(', ')}]`);
+                resolve();
+            }
+        });
+    });
+}
+
 function startGStreamerPipeline(port, streamName, options = {}) {
     const { splitTargets = null, mosaicGrid = null } = options;
 
@@ -140,15 +200,16 @@ function startGStreamerPipeline(port, streamName, options = {}) {
     logger.info(`Starting GStreamer pipeline for ${streamName} on port ${port}`);
 
     const gst = spawn('gst-launch-1.0', [
-        'udpsrc', `multicast-group=${MULTICAST_IP}`, `port=${port}`, 'auto-multicast=true', '!',
+        'udpsrc', `port=${port}`, 'buffer-size=2097152', '!',
         'application/x-rtp,media=video,clock-rate=90000,payload=96,encoding-name=H264', '!',
-        'rtpjitterbuffer', 'latency=0', '!',
+        'rtpjitterbuffer', 'latency=100', '!',
         'rtph264depay', '!', 
         'h264parse', '!', 
         'avdec_h264', '!',
         'videoconvert', '!', 
+        'queue', 'max-size-buffers=5', 'leaky=downstream', '!',
         'jpegenc', 'quality=60', '!',
-        'fdsink'
+        'fdsink', 'sync=false'
     ]);
 
     gst.on('error', (err) => {
@@ -287,6 +348,17 @@ const activePorts = new Set();
     for (const name of streamers) {
         const config = await discoverStreamConfig(DISCOVERY_PORT, DISCOVERY_TIMEOUT_SECONDS, name);
         if (!config) {
+            continue;
+        }
+
+        try {
+            const localIp = await getLocalIp(config.streamerIp);
+            const portsToSubscribe = config.mosaic 
+                ? [config.basePort] 
+                : Array.from({ length: config.streamCount }, (_, i) => config.basePort + i);
+            await sendSubscribeRequest(config.streamerIp, CONTROL_PORT, localIp, portsToSubscribe);
+        } catch (err) {
+            logger.error(`Failed to subscribe to ${config.streamerName}: ${err.message}`);
             continue;
         }
 
