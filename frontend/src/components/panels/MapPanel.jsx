@@ -5,8 +5,11 @@ import SimpleCoordinateTransform from '../../utils/SimpleCoordinateTransform'; /
 // import { MapPinIcon } from "lucide-react";
 
 const MapPanel = ({roverPos, dronePos, roverHeading, roverGPS = null, useTileSystem = true, missionArea = 'camp_randall'}) => {
-  // console.log("Rover GPS", roverGPS);
-  // console.log(useTileSystem);
+  const triangleInterval = 50;
+  const pixelPerMeter = 9.15;
+  const MIN_CIRCLE_GAP = 300; // Skip rendering circles if they are closer than 300 pixels apart
+  const renderPathLine = true;
+
   const [autoZoom, setAutoZoom] = useState(true);
   const [autoRotate, setAutoRotate] = useState(true);
   const [tileSystemReady, setTileSystemReady] = useState(false);
@@ -137,7 +140,7 @@ const convertedPathPoints = useMemo(() => {
     return {
       x: 200 + pixelDeltaX,
       y: 200 + pixelDeltaY,
-      label: point.label || `WP ${idx + 1}`
+      label: (point.label).trim().toLowerCase() || "waypoint"
     };
   }).filter(Boolean);
 }, [pathData, roverGPS]); 
@@ -260,8 +263,7 @@ const convertedPathPoints = useMemo(() => {
               DRONE
             </text> */}
 
-              //Temporarily disabled path for extreme delivery
-            {false && convertedPathPoints.length > 1 && (
+            {renderPathLine & convertedPathPoints.length > 1 && (
           <g>
             {convertedPathPoints.map((pt, idx) => {
               if (idx === convertedPathPoints.length - 1) return null;
@@ -274,7 +276,6 @@ const convertedPathPoints = useMemo(() => {
               const angle = Math.atan2(dy, dx) * (180 / Math.PI); // Convert radians to degrees
               const distance = Math.sqrt(dx * dx + dy * dy);
 
-              const triangleInterval = 50; 
               const triangleCount = Math.floor(distance / triangleInterval);
 
               return [...Array(triangleCount)].map((_, i) => {
@@ -305,11 +306,9 @@ const convertedPathPoints = useMemo(() => {
           // Local variables to track the last drawn circle within this loop execution
           let lastDrawnCircleX = null;
           let lastDrawnCircleY = null;
-          const pixelPerMeter = 9.15;
-          // Set to 0 temporarily for extreme delivery
-          const MIN_CIRCLE_GAP = 0; // Skip rendering circles if they are closer than 300 pixels apart
 
           return convertedPathPoints.map((pt, idx) => {
+            //Parameters for rendering circles and labels
             const radius = 3 / zoomScale;
             const strokeW = 1 / zoomScale;
             const fontSize = 16 / zoomScale;

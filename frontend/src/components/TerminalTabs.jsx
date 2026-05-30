@@ -30,7 +30,7 @@ const TerminalTabs = ({ onTerminalInit }) => {
             onClick={() => setActiveTab(tab)}
             className="flex-1 text-center"
           >
-            {tab.toUpperCase()}
+            {tab === "Terminal 1" ? "Basestation Console" : "Jetson Console"}
           </TabButton>
         ))}
       </div>

@@ -152,7 +152,7 @@ function CameraPanelCV() {
                 <div
                   key={activeCameraTab}
                   onClick={() => toggleFlip(activeCameraTab)}
-                  className="cursor-pointer transition-transform duration-300 ease-in-out"
+                  className="cursor-pointer transition-transform duration-300 ease-in-out h-fit"
                   style={{ transform: !!flippedCameras[activeCameraTab] ? 'rotate(180deg)' : 'none' }}
                 >
                   <RenderStream
@@ -163,7 +163,7 @@ function CameraPanelCV() {
                 </div>
                 
               {/* Secondary Bottom Row (The other two cameras) */}
-              <div className="grid grid-cols-2 gap-1">
+              <div className="grid grid-cols-2 gap-1 h-fit">
                 {cameras
                   .filter((cam) => cam !== activeCameraTab)
                   .map((cam) => {
@@ -225,16 +225,16 @@ function CameraPanelCV() {
 
         {/* Camera status info */}
         <div className="space-y-1 text-[10px] uppercase tracking-tighter border-t border-slate-800 pt-2">
-          <div className="flex justify-between">
-            <span className="text-slate-500">Exposure:</span>
-            <span className="text-green-400 font-mono">Auto</span>
-          </div>
-          <div className="flex justify-between">
+          {/* <div className="flex justify-between">
+            <span className="text-slate-500">Panorama:</span>
+            <span className="text-green-400 font-mono">Ready</span>
+          </div> */}
+          {/* <div className="flex justify-between">
             <span className="text-slate-500">Focus:</span>
             <span className="text-green-400 font-mono">Inf [∞]</span>
-          </div>
+          </div> */}
           <div className="flex justify-between">
-            <span className="text-slate-500">Network:</span>
+            <span className="text-slate-500">Camera Status:</span>
             <span className={`${Object.keys(streams).length > 0 ? 'text-green-400' : 'text-red-500'} font-mono`}>
               {Object.keys(streams).length > 0 ? 'Connected' : 'Searching...'}
             </span>
