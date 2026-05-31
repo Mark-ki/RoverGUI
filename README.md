@@ -6,15 +6,27 @@
 The deprecated version of the GUI (With flask and vanilla JS) is in ./OldVersion
 The current version is ./frontend (React) and ./backend (Node)
 
-## Current todo list
+# Description
 
-1. Finalize ros topic names
+The GUI is divided into 4 resizeable panels. The Control Panel, the Console Panel, the Camera Panel, and the Map Panel.
+The control panel displays data obtained through ROS such as heading and position.
+The console panel connects to the local console and the Jetson's console.
+The camera panel stream videos by drawing frames on canvases. The frames are sent from the backend through websocket. The backend receives frames from the pi through UDP. 
+The map panel utilizes pre downloaded chunks. Refer to the README in the frontend/src folder for more information.  
+
+Refer to Joseph for any issues with the video streaming
+Refer to Aditya for any issues with the map
+
+## Future Improvements
+
+1. More telemetry data through ROS
 2. Emergency stop button and launch script name
-3. Make the GUI work for clients other than the host
+3. Pi Terminals
 
 # To Start the GUI in 3 Easy Steps
 
-The base station already has a launch script that does all of this.
+The base station has a launch script that does all of this. 
+./startGUI.sh
 
 ## Frontend
 

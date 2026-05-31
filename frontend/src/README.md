@@ -4,6 +4,9 @@ This document provides a high-level conceptual overview of how the offline satel
 
 Rather than using an external library like Leaflet or Google Maps JS (which require constant internet access and fight with custom React rendering), this system is built entirely from scratch using pure React, SVG, and Mathematics. It is specifically designed to function offline during rover missions.
 
+The map is capable of displaying gps locations loaded in from /RoverGUI/path.csv as well as the path to traverse them.
+Adjust hyperparameters in MapPanel to customize it.
+
 ## The Source of Truth
 Before the system even boots up, map data is pre-downloaded using the `chunk_downloader.py` tool. This Python script downloads a grid of `512x512` pixel satellite images (chunks) from Google Maps at **Zoom Level 20** and generates a `metadata.json` file. Each chunk is named mathematically based on its exact center GPS coordinate. **This folder of files acts as the undisputed physical source of truth for the frontend.**
 
